@@ -87,6 +87,9 @@ class FinanceService {
     if (account.type != input.type()
         && transactions.existsByAccountIdOrDestinationAccountId(id, id))
       throw ApiException.invalid("An account with recorded transactions cannot change type.");
+    if (!isIra(input.type()) && !account.beneficiaries.isEmpty())
+      throw ApiException.invalid(
+          "Clear IRA beneficiary allocations before changing to a non-IRA account type.");
     account.name = input.name().trim();
     account.type = input.type();
     checkedBalance(account, account.balance);

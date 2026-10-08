@@ -44,6 +44,41 @@ class FinanceIntegrationTest {
   }
 
   @Test
+  void iraConversionRequiresExplicitlyClearingBeneficiaries() throws Exception {
+    UUID owner = owner();
+    AccountView ira = account(owner, AccountType.ROTH_IRA, "100.00");
+    finance.beneficiaries(
+        owner,
+        ira.id(),
+        new Beneficiaries(
+            List.of(new BeneficiaryInput("Alex Tester", "Spouse", new BigDecimal("100")))));
+    mvc.perform(
+            put("/api/accounts/" + ira.id())
+                .with(user(owner.toString()).roles("USER"))
+                .with(realCsrf(mvc, json))
+                .contentType("application/json")
+                .content("{\"name\":\"Converted checking\",\"type\":\"CHECKING\"}"))
+        .andExpect(status().isUnprocessableEntity())
+        .andExpect(jsonPath("$.code").value("BUSINESS_RULE"));
+    AccountView unchanged = finance.listAccounts(owner).getFirst();
+    assertThat(unchanged.type()).isEqualTo(AccountType.ROTH_IRA);
+    assertThat(unchanged.name()).isEqualTo(ira.name());
+    assertThat(unchanged.beneficiaries()).hasSize(1);
+
+    AccountView traditional =
+        finance.updateAccount(
+            owner, ira.id(), new AccountUpdate("Traditional IRA", AccountType.TRADITIONAL_IRA));
+    assertThat(traditional.beneficiaries()).hasSize(1);
+    finance.beneficiaries(owner, ira.id(), new Beneficiaries(List.of()));
+    AccountView savings =
+        finance.updateAccount(
+            owner, ira.id(), new AccountUpdate("Converted savings", AccountType.SAVINGS));
+    assertThat(savings.type()).isEqualTo(AccountType.SAVINGS);
+    assertThat(savings.beneficiaries()).isEmpty();
+    assertThat(savings.balance()).isEqualByComparingTo("100.00");
+  }
+
+  @Test
   void transferCorrectionsUpdateBothSidesAndCannotReverseConsumedFunds() {
     UUID owner = owner();
     AccountView checking = account(owner, AccountType.CHECKING, "1000.00"),
