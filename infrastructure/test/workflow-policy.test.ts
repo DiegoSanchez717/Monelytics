@@ -31,6 +31,11 @@ function assertZeroSpendWorkflow(source: string): void {
     assert.ok(allowedActions.has(action), `action ${action} needs zero-spend review`);
     assert.match(revision, /^[a-f0-9]{40}$/, 'actions must be pinned to a reviewed commit');
   }
+  const nodeSetups = [...source.matchAll(/uses: actions\/setup-node@[a-f0-9]{40}[^\r\n]*\r?\n([\s\S]*?)(?=^      -|(?![\s\S]))/gm)];
+  assert.equal(nodeSetups.length, 3);
+  for (const [, inputs] of nodeSetups) {
+    assert.match(inputs, /^          package-manager-cache: false\r?$/m, 'setup-node automatic caching must be disabled');
+  }
   assert.doesNotMatch(source, /upload-artifact|actions\/cache|cache-dependency-path|cache-(?:to|from):|snapshot:/);
   for (const [, value] of source.matchAll(/^\s+cache:\s*(.+)\r?$/gm)) {
     assert.match(value.trim(), /^['"]?false['"]?$/, 'all action caches must be explicitly disabled');
@@ -58,6 +63,8 @@ test('workflow policy rejects artifact uploads and explicitly or implicitly enab
     workflow.replace("cache: 'false'", "cache: 'true'"),
     workflow.replace("          cache: 'false'\n", '').replace("          cache: 'false'\r\n", ''),
     workflow.replace("node-version: '24.12.0'", "node-version: '24.12.0'\n          cache: npm"),
+    workflow.replace('package-manager-cache: false', 'package-manager-cache: true'),
+    workflow.replace('          package-manager-cache: false\n', '').replace('          package-manager-cache: false\r\n', ''),
   ]) assert.throws(() => assertZeroSpendWorkflow(modified));
 });
 
