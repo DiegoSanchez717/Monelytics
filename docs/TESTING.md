@@ -2,74 +2,66 @@
 
 ## Automated layers
 
-- Angular tests cover authentication/CSRF communication, guards, forms, components, and retirement validation. Strict production compilation and ESLint check the application contracts.
-- JUnit/Mockito tests cover retirement calculations and TOTP behavior. API integration tests exercise controllers, validation, cookies/CSRF, ownership, roles, and ledger mutations. H2 is a fast test fixture, not the production database.
-- The `postgres-it` Maven profile runs Testcontainers against PostgreSQL, validating real migrations and database behavior. A running Docker engine is required.
-- Playwright calls the live same-origin API and drives the actual UI against Compose/PostgreSQL. It checks ledger reversal/application, overdrafts, ownership, CSRF, beneficiary totals, goals, MFA/replay, administrator audit access, registration, account and transaction forms, calculator output, modal focus restoration, production stylesheet loading, mobile overflow, and axe accessibility rules. Table checks wait for data to render before accessibility analysis.
-- AWS CDK assertions verify security and routing properties of synthesized infrastructure. Synthesis creates a local CloudFormation artifact; it does not create AWS resources.
-- GitHub Actions repeats builds, tests, Compose/browser verification, dependency audits, and image scans before an explicitly triggered deployment.
+- Angular/Vitest tests cover authentication and CSRF communication, guards, forms, reusable components, budgets, bills, savings, charts and assistant states. ESLint, Prettier and strict production compilation check the application contracts.
+- JUnit/Mockito tests cover exact-decimal calculations, TOTP and assistant assessment/provider behavior. MockMvc integration tests use actual CSRF cookies and headers to exercise validation, sessions, ownership, roles, transfers, budget limits, recurring payment idempotency, savings contributions, CSV escaping and recovery. H2 is a fast test fixture, not the production database.
+- The `postgres-it` Maven profile uses Testcontainers with real PostgreSQL, exercising all Flyway migrations, database constraints and ledger behavior. Docker must be running.
+- Playwright drives the production Compose application and same-origin APIs backed by PostgreSQL. Tests create synthetic accounts and check financial workflows, reset emails in local Mailpit, MFA/replay, authorization, assistant affordability and read-only behavior. Axe checks cover desktop/mobile pages, loaded tables and dialogs; keyboard checks include Escape and focus restoration.
+- CDK assertions verify reference security properties and that every synthesized resource is disabled. Policy tests enforce fail-closed audit exceptions, no-spend deployment guards and public-runner-only CI without artifact/cache billing.
+- GitHub Actions repeats builds, tests, PostgreSQL integration, Docker/browser verification, dependency reviews and Trivy image scans. It never deploys resources.
 
 ## Commands
 
-```powershell
-cd frontend
-npm.cmd ci
-npm.cmd run lint
-npm.cmd test
-npm.cmd run build
-```
-
-```powershell
+```sh
+npm ci --prefix frontend
+npm run lint --prefix frontend
+npm run format:check --prefix frontend
+npm test --prefix frontend
+npm run build --prefix frontend
 cd backend
-./mvnw.cmd verify
-./mvnw.cmd verify -Ppostgres-it
-```
-
-Java formatting is enforced by Maven verification. Use the formatting goal documented in `pom.xml` before committing Java changes.
-
-```powershell
-cd infrastructure
-npm.cmd ci
-npm.cmd test
-npm.cmd run synth -- --quiet
-```
-
-```powershell
+./mvnw clean verify -Ppostgres-it
+cd ..
+npm ci --prefix infrastructure
+npm test --prefix infrastructure
+npm run synth --prefix infrastructure
+npm run audit --prefix infrastructure
 node scripts/run-local.mjs
+npm ci --prefix tests/e2e
 cd tests/e2e
-npm.cmd ci
-npx.cmd playwright install chromium
-npm.cmd test
+npx playwright install chromium
+npm test
 ```
 
-Linux CI installs Chromium system dependencies with `npx playwright install --with-deps chromium`. Use `E2E_BASE_URL` to select a disposable target. Tests create synthetic user records, and repeated tests can reach the authentication rate limit; use a fresh disposable test instance for extensive reruns. Do not use a customer database.
+On Windows use `npm.cmd`, `npx.cmd` and `backend/mvnw.cmd`, with Java 21 in `JAVA_HOME`. `./mvnw spotless:apply` formats Java; Maven verification enforces formatting. Linux CI installs browser dependencies using `npx playwright install --with-deps chromium`.
+
+`E2E_BASE_URL` selects a disposable app target; `E2E_MAIL_URL` selects its local Mailpit viewer. Tests create synthetic records. Authentication is limited to 30 requests per IP per 15 minutes, so extensive reruns should use a fresh disposable test instance. Never point these tests at a customer database or expose the development mailbox publicly.
 
 ## Verification record
 
-Executed on the provided Windows workstation with Node 24.12, Java 21, and Docker Desktop using Linux containers. Test reports are generated locally in ignored output directories; live session-bearing traces are not published. Screenshots in `docs/screenshots` show synthetic demo information.
+Verification uses Node 24.12, Java 21 and Docker Desktop Linux containers on the provided Windows workstation. Local logs, reports, email tokens and session-bearing traces stay in ignored directories. Published screenshots contain fictional demo records.
 
 | Check | Result |
-|---|---|
-| Frontend ESLint | Passed |
-| Angular/Vitest | 33 tests passed in 7 files |
-| Angular production build | Passed; initial raw bundle 330.16 kB, CLI estimated transfer 89.62 kB |
-| Frontend npm dependency audit | 0 vulnerabilities |
-| Maven + Spotless + PostgreSQL profile | 24 tests passed, including OpenAPI and session cookie checks; executable JAR packaged |
-| CDK assertions and audit-policy tests | 10 tests passed |
-| CDK synthesis | Passed without provisioning resources |
-| Infrastructure dependency review | 1 high, 0 critical; exact deployment-tool exception documented in SECURITY.md |
-| Docker Compose main/development configuration | Validated |
-| Frontend/backend Docker images | Built successfully with runtime security updates |
-| Docker Compose startup | Database, API, and frontend healthy |
-| Live Playwright/API/browser suite | 8 tests passed against the final production containers and PostgreSQL |
-| Accessibility and keyboard checks | Landing, dashboard, loaded transactions, accounts, forms, goals/calculator, settings, and admin audit passed axe checks; Escape restores modal focus |
-| Runtime image security scans | Trivy 0.75.0: 0 fixable HIGH/CRITICAL findings in both final images; pgJDBC coordinate separately verified |
-| Source formatting and staged-secret checks | Passed; ignored local secrets excluded from staged files |
+| --- | --- |
+| Angular ESLint / Prettier | Passed |
+| Frontend / browser-test dependency audits | Zero vulnerabilities |
+| Angular/Vitest | 66 tests passed across 11 files |
+| Angular production build | Passed; 357.03 kB initial raw bundle, 94.94 kB estimated transfer |
+| Backend regression + PostgreSQL | 53 tests passed in reverse class order, including 5 PostgreSQL tests |
+| Assistant / local provider verification | 12 tests passed, including 2 additional local HTTP provider tests |
+| Backend unique test count | 56 tests including the additional IRA-conversion regression; overlapping runs are counted once |
+| Maven packaging / Spotless | Passed |
+| Infrastructure policies / CDK assertions | 18 tests passed |
+| CDK offline synthesis | Passed; all resources have a constant-false provisioning condition |
+| Infrastructure dependency review | One documented high-severity CDK tooling exception; no critical findings |
+| Compose production builds / startup | Built; PostgreSQL, API, frontend and local mailbox healthy |
+| Browser / accessibility suite | All 10 distinct tests passed; an ambiguous locator was fixed and its workflow rerun successfully |
+| Runtime image vulnerability scans | Final image scans pending |
 
-All 75 tests passed: 33 frontend, 24 backend, 10 infrastructure, and 8 end-to-end tests. Desktop/mobile screenshots were visually inspected. Bundle transfer values are Angular CLI estimates, not measured production network performance. The security scan record (being refreshed for the general-finance features) records the tested image digests, timestamps, package counts, and scan scope. Trivy's JAR index did not identify the newly released PostgreSQL JDBC artifact automatically; its packaged version was checked and its explicit Maven coordinate was scanned separately.
+The backend regression deliberately ran API security tests after the newer integration classes to verify that CSRF fixtures do not change shared security behavior. The local-provider tests check actual HTTP requests, rejected generated prose and reviewed fallback answers without paid API calls.
+
+The narrow infrastructure exception concerns the CDK bundle's `brace-expansion` dependency, is machine-checked against exact advisory IDs and expires on November 7, 2026. It does not permit unexpected findings or runtime-image vulnerabilities. Raw audit output remains in CI job logs and an ignored local report; no billable Actions artifact storage is used.
 
 ## Interpretation and limits
 
-Accessibility automation checks a subset of WCAG rules. Keyboard operation and responsive screenshots complement those checks; automated success is not a formal accessibility certification. Infrastructure assertions cannot verify AWS account permissions, quotas, certificate issuance, DNS propagation, regional capacity, or actual deployment health.
+Accessibility automation checks a subset of WCAG rules; screenshots and keyboard checks complement it. Passing these checks is not a formal accessibility certification. Angular transfer figures are CLI estimates, not measured network performance. Tests do not establish banking compliance, production throughput, a coverage percentage or real customer outcomes.
 
-This project does not claim measured production throughput, banking compliance, or a coverage percentage. Production load testing, penetration testing, cloud smoke checks, and backup restoration exercises remain separate operational work.
+Offline infrastructure validation cannot verify AWS permissions, account eligibility, quotas, DNS, certificates, instance availability or deployed health. AWS remains unprovisioned. Public HTTPS, private SMTP, backup restoration, load testing and independent security review remain operator work before a deliberately shared release.

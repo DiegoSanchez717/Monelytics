@@ -1,46 +1,33 @@
-# Security model
+# Security controls and operational limits
 
-Monelytics demonstrates financial application engineering using synthetic information. It does not connect to banks, move money, store banking credentials, or claim regulatory compliance.
+## Authentication and recovery
 
-## Implemented controls
+Passwords use BCrypt cost 12, a minimum 12-character strong-password policy for registration/recovery and a 72-byte UTF-8 maximum. Credential DTOs redact `toString()` output. Login rotates the session and stores authentication in PostgreSQL-backed Spring Session; browser storage contains no authentication token. Session cookies are HttpOnly/SameSite=Lax and become Secure through `COOKIE_SECURE=true`. Logout invalidates sessions.
 
-Passwords are BCrypt hashed. Registration validates strength, length, email, and names; client and server validation run independently. Session identity rotates on login and is stored with Spring Session JDBC. Production cookies are Secure, HttpOnly, and SameSite=Lax. The browser keeps neither bearer tokens nor passwords in localStorage. CSRF tokens protect session-authenticated mutations, including authentication endpoints.
+TOTP MFA uses authenticator-app codes, AES-GCM encrypted secrets, a stable 32-byte environment key and monotonic accepted steps to reject replay. Setup/enable/disable require password confirmation; enable/disable also require a valid unused code. Failed login counts and lockouts persist in PostgreSQL.
 
-The Angular application uses same-origin API routing. Arbitrary cross-origin access is not enabled. Spring Security enforces user/admin roles. Services scope every owned account, ledger entry, and goal to the authenticated user. An administrator can read audit events; administration does not grant access to another user's account operations.
+Recovery creates a cryptographically random 256-bit URL token, stores only its SHA-256 hash, expires after 30 minutes, and consumes all outstanding links on success. Per-account request cooldown and per-IP throttling limit abuse. The request response is identical for unknown/throttled addresses; tokens and delivery state never enter API responses. SMTP dispatch happens asynchronously after commit. Reset revokes existing sessions and preserves MFA. Tokens, recipients, SMTP secrets and message bodies are not logged. Local Mailpit captures synthetic mail without external delivery.
 
-MFA uses time-based authenticator codes and encrypted secrets with a 32-byte environment-supplied encryption key. Setup requires password verification, and enabling requires a valid code. Replay protection records the accepted time step. Disabling requires password and code. Protect and back up the key; changing it without a migration makes existing encrypted secrets unusable.
+## Authorization and financial integrity
 
-JPA parameters protect against SQL injection. DTOs constrain writable fields and reject unknown input properties. Monetary validation rejects fractional cents, negative deposits, overdrafts, and invalid allocations. Angular encodes template output. Secure headers reduce content sniffing and framing. Authentication throttling and lockout reduce repeated guesses. Request IDs and structured logs omit credentials and MFA secrets; audit records use bounded action descriptions.
+Spring Security protects APIs, enforces USER/ADMIN roles and restricts audit access to administrators. Every account/category/budget/bill/goal/transaction lookup is owner-scoped; foreign IDs receive a safe missing-resource response. Client route guards complement server enforcement.
 
-The API reads JSON bodies through a bounded 256 KiB filter before controllers execute, including unknown-length/chunked requests. Local Nginx applies the same request-size ceiling. Oversized requests receive 413; unsupported media types and methods retain safe 415/405 responses. Field validation messages are summarized in the UI without exposing internal exceptions.
+All mutating endpoints, including auth/recovery/assistant POSTs, require CSRF cookies and `X-XSRF-TOKEN`. Money uses exact decimal arithmetic. Database constraints, user/account locks, deterministic lock ordering, optimistic versions and occurrence uniqueness enforce transactional consistency. CSV fields are quoted and formula-starting text is escaped. Search/sort fields are allowlisted and exports are bounded.
 
-Flyway and constraints enforce database invariants. Balance changes and audit records use database transactions. Runtime container users are unprivileged. Secrets are injected through environment variables locally and AWS Secrets Manager in cloud configuration. Demo seeds are disabled in production; Swagger can be disabled. CI includes dependency/image scanning.
+The assistant is read-only. It obtains factors from owned records and reports missing income instead of inventing affordability. Provider defaults are mock/$0. Optional Ollama is local-only, cannot follow redirects or route cloud models, receives no ledger/account records and can only select a reviewed education topic. It cannot execute a transaction. Every reply states that it is educational, not professional financial advice.
 
-Production Angular builds disable critical CSS inlining so stylesheets load without inline JavaScript event handlers. This keeps `script-src 'self'` compatible with the generated application. Browser checks verify computed styles against the actual container security headers.
+## Request and runtime protections
 
-## Threat model
+Authentication/recovery share a 30-attempt per-IP/15-minute window; assistant requests have a separate 20-request window. Maps are bounded and stale entries are evicted. This is per-instance protection, not a distributed edge rate limiter. Request bodies are capped at 256 KiB including missing Content-Length. Validation, framework errors and conflicts return safe Problem Details with a correlation ID; unexpected details remain server-side.
 
-| Threat | Control | Residual concern |
-|---|---|---|
-| Cross-user resource access | Ownership-scoped service/repository queries | Review every new endpoint and test both users |
-| Credential theft | BCrypt, HttpOnly cookie, optional MFA | Phishing, compromised endpoint, account recovery |
-| CSRF | Token required on state-changing requests | XSS could act within an authenticated origin |
-| XSS | Angular encoding and restrictive headers | Avoid unsafe HTML and audit third-party dependencies |
-| Concurrent balance corruption | Atomic reversal/application and row locking | Multi-account operations must use deterministic lock order |
-| Secret leakage | Ignored local env, injected secrets, safe logs | Protect CI permissions and CloudWatch access |
-| Brute force | Rate limiting and account lockout | Per-instance limits require an edge/shared limiter at scale |
-| Supply-chain issue | Lockfiles, CI scans, pinned runtime baseline | Triage new advisories and validate remediation |
+Nginx serves same-origin APIs with browser security headers and a restrictive app script policy. Swagger's backend UI requires its own script policy; disable API docs before a public release. Local database/SMTP services are private, exposed app/API/mailbox ports bind to loopback, and the application container runs as non-root. Structured logging, dependency checks, image scans and health checks support operations.
 
-## Before handling real financial information
+## Configuration and release prerequisites
 
-Add reviewed recovery flows, MFA recovery codes, email verification, password reset, shared throttling/WAF, account lifecycle and retention policies, compliance review, penetration testing, incident response, encrypted backups with restore drills, approved secrets rotation, and access reviews. MFA currently has no self-service recovery; loss of the authenticator requires a reviewed operator procedure. Do not bypass MFA by changing user records casually.
+`.env` is ignored. Setup generates random private database/MFA values, preserving existing keys. Public demo passwords, sample database values and example MFA keys are synthetic local/CI fixtures; disable demos and replace all fixture secrets for any shared instance.
 
-The contribution threshold is configurable and intentionally not a complete tax-rules engine. Catch-up amounts, income eligibility, tax filing status, rollover eligibility, penalties, and jurisdiction-specific requirements require a separate reviewed implementation. Goals are user-entered planning scenarios. Synthetic transactions are editable; this portfolio ledger is not an immutable accounting system.
+Before deliberately sharing a deployment: configure HTTPS and Secure cookies, private credentials, authenticated TLS SMTP, database/key backups, backup-restore checks, monitoring, least-privilege access and a documented response process. Disable demo seeding and public Swagger. Never silently rotate the MFA key. These are manual operator responsibilities; the repository does not establish banking compliance or production customer use.
 
-Local HTTP uses `COOKIE_SECURE=false` on loopback. HTTPS is required in production. Avoid exposing local Compose ports publicly. Production uses separate environment values, private RDS networking, least-privilege task roles, HTTPS delivery, and managed secrets. Never commit `.env`, AWS credentials, private keys, or real customer records.
+AWS and paid AI are disabled by default. Deployment scripts fail before AWS calls; generated resource templates have a constant-false condition on every resource. Local Compose is the supported permanent $0 runtime. AWS Free account plans are temporary, and a billing alert alone cannot enforce a zero-spend requirement. See [AWS policy](AWS-DEPLOYMENT.md).
 
-## Deployment-tool dependency review
-
-Runtime maintenance pins in `backend/pom.xml` upgrade Spring Boot/Spring Framework, align Jackson dependency families, and update Tomcat and PostgreSQL JDBC. The application uses the publicly patched Spring Framework 7 branch rather than suppressing the scanner's Spring MVC finding. Framework upgrades require the full API/PostgreSQL suite and live same-origin browser checks, including CSRF and MFA; `V3` invalidates older serialized sessions during this upgrade.
-
-The infrastructure audit records one high finding in CDK's bundled `brace-expansion` 5.0.9. CDK tooling processes repository-controlled glob expressions; it is not shipped in the frontend or API runtime. A fail-closed, exact-advisory/path/version exception is defined in the [audit policy](../infrastructure/scripts/audit-policy.mjs) and expires November 7, 2026. Other high/critical findings still block CI. Replace the exception with a clean upstream upgrade when available; it is not a claim of zero infrastructure-tool vulnerabilities.
+The narrow CDK bundled-dependency exception is documented, machine-tested and time-limited. It does not cover unexpected findings or runtime images. See [test/security verification](TESTING.md) and the raw infrastructure audit file and CI job logs.

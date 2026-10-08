@@ -1,173 +1,191 @@
 # Monelytics
 
-[![Validate Monelytics](https://github.com/DiegoSanchez717/Monelytics/actions/workflows/ci.yml/badge.svg)](https://github.com/DiegoSanchez717/Monelytics/actions/workflows/ci.yml)
+A personal finance application for understanding spending, planning budgets, tracking bills and building savings. Built with **Angular, TypeScript, JavaScript, HTML, CSS, Java 21, Spring Boot, PostgreSQL, Docker**, and tested **Amazon Web Services (AWS) CDK** architecture references.
 
-**A clearer path to retirement.** Monelytics is a full-stack retirement finance application built in the [Monelytics repository](https://github.com/DiegoSanchez717/Monelytics). It uses Angular, TypeScript, JavaScript, HTML, CSS, Java, Spring Boot, PostgreSQL, Docker, and Amazon Web Services infrastructure.
+The app uses **Monelytics**, an **M monogram**, teal **#48D1CC** and coral **#EF7A6C**. All demo people and financial records are fictional. It records information you enter; it does not connect to a bank or move money.
 
-The interface takes inspiration from the supplied dashboard reference: rounded navigation, a soft neutral background, generous balance charts, and `#48D1CC` teal / `#EF7A6C` coral accents. It has independent Monelytics branding and no company logos or proprietary assets.
+[Desktop preview](docs/screenshots/dashboard-desktop.png) | [Mobile preview](docs/screenshots/dashboard-mobile.png) | [Landing page](docs/screenshots/landing.png)
 
+## Run locally for $0
 
-## Features
+The supported runtime is your own computer: open-source PostgreSQL, Docker Engine/Compose and mock AI. Setup makes no paid AI calls, creates no cloud resources and sends no external email. Docker Desktop has separate licensing terms; Docker Engine is the open-source alternative. Your existing computer and internet connection are assumed.
 
-- Registration, login, logout, protected routes, USER/ADMIN roles, and optional authenticator MFA.
-- Dashboard with IRA balances, contribution progress, historical activity, account cards, and retirement milestones.
-- Roth and Traditional IRA management, with beneficiary allocation validation.
-- Transaction creation, editing, deletion, search, account/type/date filters, sorting, and pagination.
-- Exact-decimal balances, atomic ledger changes, overdraft protection, and a configurable annual contribution policy.
-- Retirement goals and a calculator with monthly compounding, zero-return handling, and transparent assumptions.
-- Responsive layouts, keyboard navigation, labeled reactive forms, accessible SVG charts, and loading/error/empty/success states.
-- Account-action audit events and an administrator audit viewer.
-- OpenAPI/Swagger, Flyway migrations, structured JSON logs, request IDs, and health/readiness endpoints.
-- Frontend/backend tests, PostgreSQL integration tests, live browser/API tests, container builds, security scanning, and gated GitHub Actions deployment.
+Prerequisites: Git, Node.js **24.12+ within 24.x**, Docker with Compose. Java 21 is needed only for native Java development. Default ports: app **8080**, API **8081**, local email viewer **8025**. Change `.env` ports if occupied.
 
-Monelytics uses synthetic financial information. It does not hold or transfer funds, connect to banks, determine tax eligibility, or provide investment advice. The contribution threshold is an application planning policy; confirm actual eligibility and limits separately.
-
-## Technology versions
-
-| Layer | Technology |
-|---|---|
-| Browser | Angular 21.2.25, Angular CLI/build 21.2.26, TypeScript 5.9.3, RxJS 7.8 |
-| UI assets | JavaScript runtime, semantic HTML, plain CSS, native SVG charts |
-| API | Java 21, Spring Boot 4.0.8, Spring Security, JPA/Hibernate, Bean Validation |
-| API tooling | Maven wrapper, Flyway, Spring Session JDBC, Actuator, springdoc OpenAPI 3.0.3 |
-| Database | PostgreSQL 17.11 |
-| Local runtime | Node.js 24.12+ within 24.x, Docker Desktop/Engine, Docker Compose |
-| AWS definitions | TypeScript AWS CDK 2.272.0; lockfiles pin complete dependency trees |
-| Testing | Angular/Vitest, JUnit/Mockito, Testcontainers, Playwright, axe-core |
-
-Angular 21 is a maintained baseline compatible with the provided Node 24.12 environment. Compatibility follows the [official Angular version matrix](https://angular.dev/reference/versions); Java compatibility follows the [Spring Boot requirements](https://docs.spring.io/spring-boot/4.0/system-requirements.html). See each package lockfile and `backend/pom.xml` for exact transitive versions and security maintenance overrides.
-
-## Run locally
-
-Install Docker Desktop with Linux containers and Node.js 24.x. From the repository root:
-
-```powershell
+```sh
+git clone https://github.com/DiegoSanchez717/Monelytics.git
+cd Monelytics
 node scripts/run-local.mjs
 ```
 
-This creates an ignored `.env` with random database/MFA secrets if one does not exist, builds all containers, runs migrations, and waits for health checks. Existing configuration and MFA keys are preserved.
+The script generates an ignored `.env` with random database and MFA secrets if none exists, then builds the health-checked stack. Existing configuration and volumes are preserved. First startup downloads dependencies/images.
 
-- Application: **http://localhost:8080**
-- Direct API/Swagger: **http://localhost:8081/swagger-ui/index.html**
-- API health: **http://localhost:8081/actuator/health/readiness**
+- App: <http://localhost:8080>
+- Readiness: <http://localhost:8081/actuator/health/readiness>
+- Swagger: <http://localhost:8081/swagger-ui/index.html>
+- Recovery email viewer: <http://localhost:8025>
 
-If a port is occupied, change `FRONTEND_PORT` or `BACKEND_PORT` in `.env` and run the command again. This workstation uses backend port **8082** because an existing unrelated service occupies 8081. The UI remains on 8080.
+This workspace uses API port **8082** because another project occupies 8081. The browser still uses `/api` on 8080. On Windows use `npm.cmd`/`npx.cmd` if PowerShell blocks `npm.ps1`.
 
-Equivalent explicit setup:
-
-```powershell
-node scripts/setup-local.mjs
-docker compose up --build --wait --wait-timeout 300
+```sh
 docker compose ps
+docker compose logs --tail 100 backend
+docker compose stop
+docker compose up --build --wait --wait-timeout 300
 ```
 
-Stop without deleting data:
+`stop` preserves financial data. Delete volumes only when deliberately resetting a disposable demonstration. [Docker instructions](docs/DOCKER.md)
 
-```powershell
-docker compose down
-```
+## Demo accounts
 
-PostgreSQL records persist in a named volume. Removing that volume deliberately resets all development data, users, and MFA enrollment. See [Docker instructions](docs/DOCKER.md).
+Intentionally public **synthetic local demonstration** credentials; seeding requires `DEMO_ENABLED=true`. Disable seeding and create private accounts before sharing any instance.
 
-### Demo accounts
+| Role | Email | Password |
+| --- | --- | --- |
+| User | `demo@monelytics.dev` | `Monelytics!2026` |
+| Administrator | `admin@monelytics.dev` | `AdminDemo!2026` |
 
-| Role | Email | Local password |
-|---|---|---|
-| User | `demo@monelytics.dev` | `DemoPath!2026` |
-| Administrator | `admin@monelytics.dev` | `AdminPath!2026` |
+The demo includes several months of salary, everyday expenses, bills/subscriptions, category budgets, savings goals and contributions. Administrators can review audit events. Registration creates useful default categories and no invented financial records.
 
-These are public synthetic demo credentials, seeded only when enabled. `.env` can override passwords on first initialization; it does not reset existing users on restart. Production disables demo seeds.
+## Features
 
-### Develop outside containers
+- Registration, login/logout, password recovery, optional authenticator-app MFA and protected user/admin routes.
+- Dashboard: monthly income, expenses, cash flow, net account balances, budget usage, savings progress and recent activity.
+- Checking, savings, credit-card and IRA accounts; retirement beneficiary management.
+- Categorized income/expenses, atomic transfers, editing/deletion, search, account/category/type/date filters, sorting and pagination.
+- Monthly overall/category budgets with progress bars and warning/overspending states.
+- Bills/subscriptions with recurrence dates, active/paused states and idempotent payment recording.
+- Savings targets, deadlines, planned contributions and contribution history. Contributions are planning allocations, **not** bank transfers or additional expenses.
+- Recorded spending trends, income-versus-expenses charts, category breakdowns and six-month comparisons.
+- Derived notifications for budget limits, upcoming/overdue bills, unusually large expenses and savings milestones.
+- Owner-scoped CSV export with spreadsheet-formula escaping.
+- Read-only assistant with general education, purchase affordability factors and personalized spending/saving suggestions.
+- Responsive navigation, keyboard-accessible dialogs, reactive validation and loading/empty/success/error states.
 
-Prerequisites: Java 21, Node.js 24.x, and Docker. Maven is supplied by the wrapper.
+## Assistant and privacy
 
-```powershell
-node scripts/setup-local.mjs
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d database
-```
+The default **MOCK** provider requires no API key. Reviewed education is combined with deterministic analysis of the signed-in user's recorded income, expenses, cash balances, card debt, budgets, bills and incomplete savings goals. No recorded income produces an explicit insufficient-information result. A purchase assessment never changes the ledger.
 
-Set `DATABASE_URL=jdbc:postgresql://localhost:5432/monelytics`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`, and `MFA_ENCRYPTION_KEY` from your ignored `.env`. For local demo data set `DEMO_ENABLED=true`, `DEMO_PASSWORD`, and `ADMIN_PASSWORD`. Keep `COOKIE_SECURE=false` for loopback HTTP. Then, in separate terminals:
+The estimate reserves upcoming bills and planned savings against recorded cash flow, and additionally reserves card debt against liquid funds. It uses the smaller remaining amount and applies the tighter overall/category budget room. Limited cushions, historical months or an unselected category budget produce caution. It is **educational information, not professional financial advice**, a future-income forecast or a bank authorization.
 
-```powershell
-cd backend
-./mvnw.cmd spring-boot:run
-```
+`FinancialEducationProvider` is replaceable. Optional **local Ollama** selects a topic from a strict allowlist; generated prose is never displayed and account/ledger records are never sent to the model. Invalid output, failures and timeouts fall back to mock. Paid providers, remote URLs and cloud-routed models are rejected.
 
-```powershell
-cd frontend
-npm.cmd ci
-npm.cmd start
-```
-
-Angular serves on http://localhost:4200 and proxies `/api` to localhost:8080. On Linux/macOS use `./mvnw`, `npm`, and environment assignment syntax for your shell. Do not run native API port 8080 while Compose frontend already occupies that port; use one development mode at a time.
+To opt into an already-downloaded local model, configure `AI_PROVIDER=local`, `AI_API_KEY=local-only`, `AI_MODEL=llama3.2:3b`, and an allowed local `AI_LOCAL_URL`. The marker is a local opt-in, not a real credential. Docker can reach a host Ollama server through `http://host.docker.internal:11434`. The default app downloads no model; model storage and hardware remain your responsibility.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  Angular[Angular SPA] -->|JSON, cookie, CSRF| Spring[Spring Boot REST API]
-  Spring -->|JPA, transactions| PostgreSQL[(PostgreSQL)]
-  GitHub[GitHub Actions] --> Checks[Build / tests / security scans]
-  Checks -->|manual gated deployment| AWS[AWS CDK: CloudFront, S3, ECS, RDS]
+  B[Browser] --> A[Angular components / reactive forms / guards]
+  A --> N[Nginx same-origin API proxy]
+  N --> S[Spring Boot controllers / DTO validation / safe errors]
+  S --> SEC[Spring Security / sessions / CSRF / MFA]
+  S --> F[Finance / planning / analytics services]
+  S --> AI[Read-only assessment / education provider]
+  F --> DB[(PostgreSQL / JPA / Flyway / audit / sessions)]
+  AI --> F
+  S --> MAIL[Local Mailpit / password recovery]
+  AI -. optional classification .-> L[Local Ollama]
 ```
 
-`frontend/` contains typed API services, guards/interceptors, shared presentation components, and lazy feature routes. `backend/` separates controllers, DTOs, domain services, repositories, entities, validation, and security. Monetary changes and audit records commit together. Sessions reside in PostgreSQL so AWS API replicas share authentication.
+Angular uses lazy standalone pages, shared charts/dialogs/states, typed HTTP services, reactive forms, guards and a credential/CSRF interceptor. Java uses controllers, DTOs, services, repositories, Hibernate, validation and centralized problem responses. Exact-decimal money, row locks, transaction boundaries, owner checks and unique constraints protect transfers and recurring payments. Database-backed sessions keep authentication tokens out of browser storage.
 
-The REST contract is documented in [API.md](docs/API.md) and generated OpenAPI. See [architecture diagrams](docs/ARCHITECTURE.md) and the [database schema](docs/DATABASE.md).
+[Detailed architecture and ER diagram](docs/ARCHITECTURE.md) · [Security](docs/SECURITY.md) · [Verification](docs/TESTING.md)
 
-## Configuration
+## Database and migrations
 
-Local variables are described in `.env.example`. The database password and stable 32-byte base64 MFA encryption key must remain outside source control. `COOKIE_SECURE`, `DEMO_ENABLED`, and `API_DOCS_ENABLED` differ between local and cloud deployment. `CONTRIBUTION_LIMIT` changes the educational planning threshold; it is not a substitute for reviewed tax rules.
+Users own `financial_accounts`, `finance_categories`, `monthly_budgets`, `recurring_items` and `savings_goals`. Accounts own `ledger_transactions` and `beneficiaries`; goals own `goal_contributions`. `password_resets` stores hashed tokens. `audit_events` records important actions. `SPRING_SESSION`/`SPRING_SESSION_ATTRIBUTES` persist sessions.
 
-Production obtains credentials and the encryption key from Secrets Manager, runs behind HTTPS, and disables demo accounts and public Swagger. Logs omit credential payloads and contain request IDs. Review [SECURITY.md](docs/SECURITY.md) for implemented controls, the threat model, and remaining controls for real financial information.
+Flyway runs at startup; Hibernate validates the schema. Existing V1–V3 SQL migrations are unchanged. V4 expands/renames the original retirement tables while preserving data; V5 adds recovery. Demo initialization is opt-in. Never edit an applied SQL migration or use `ddl-auto=update`.
 
-## Test and build
+## REST API
 
-```powershell
-cd frontend
-npm.cmd ci
-npm.cmd run lint
-npm.cmd test
-npm.cmd run build
+OpenAPI JSON: `/v3/api-docs`; Swagger: `/swagger-ui/index.html` when `API_DOCS_ENABLED=true`. Generated documentation includes DTO constraints and pagination fields.
+
+| API prefix/path | Purpose |
+| --- | --- |
+| `/api/auth` | CSRF token, registration, login/logout, current user, recovery and TOTP setup/enable/disable |
+| `/api/accounts`, `/{id}/beneficiaries` | Accounts and beneficiary management |
+| `/api/transactions`, `/{id}`, `/export.csv` | Ledger CRUD, filters, sorting, pagination and CSV |
+| `/api/categories`, `/api/budgets` | Owner-scoped categories and overall/category monthly budgets |
+| `/api/recurring`, `/{id}/pay` | Bills/subscriptions and occurrence-specific payment recording |
+| `/api/goals`, `/{id}/contributions`, `/calculate` | Savings goals, allocations and optional retirement projection |
+| `/api/dashboard`, `/api/analytics`, `/api/notifications` | Monthly overview, charts and alerts |
+| `/api/assistant/chat` | Read-only education and optional purchase assessment |
+| `/api/audit` | Administrator-only audit pagination |
+
+Obtain `/api/auth/csrf`, retain its `XSRF-TOKEN` cookie and send the returned value in `X-XSRF-TOKEN` for **every mutation**, including login/registration/recovery. Retain the HttpOnly `MONELYTICS_SESSION` cookie after login. Server authorization checks roles and ownership; route guards alone cannot authorize a request.
+
+Example authenticated `POST /api/assistant/chat` body:
+
+```json
+{"question":"Would this purchase leave room for my savings plan?","purchaseAmount":125.00,"month":"2026-10"}
 ```
 
-```powershell
+Optional `categoryId` selects an owned expense category. The response contains provider, decision, actual factors, recommendations, timestamp and disclaimer.
+
+## Development and testing
+
+```sh
+npm ci --prefix frontend
+npm run lint --prefix frontend
+npm run format:check --prefix frontend
+npm test --prefix frontend
+npm run build --prefix frontend
 cd backend
-./mvnw.cmd verify
-./mvnw.cmd verify -Ppostgres-it
-```
-
-The PostgreSQL profile requires a running Docker engine. Live full-stack checks:
-
-```powershell
+./mvnw clean verify -Ppostgres-it
+cd ..
+npm ci --prefix infrastructure
+npm test --prefix infrastructure
+npm run synth --prefix infrastructure
+npm run audit --prefix infrastructure
+npm ci --prefix tests/e2e
 cd tests/e2e
-npm.cmd ci
-npx.cmd playwright install chromium
-npm.cmd test
+npx playwright install chromium
+npm test
 ```
 
-Infrastructure checks:
+Windows: use `backend\mvnw.cmd` with Java 21 in `JAVA_HOME`. Real PostgreSQL tests require Docker and the `postgres-it` profile. Browser tests need the running stack; `E2E_BASE_URL` supports a different port.
 
-```powershell
-cd infrastructure
-npm.cmd ci
-npm.cmd test
-npm.cmd run synth -- --quiet
+Native frontend: `npm start --prefix frontend`; align `frontend/proxy.conf.json` with the native API port. Native backend: set `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`, `MFA_ENCRYPTION_KEY`, optional SMTP/demo variables, then `./mvnw spring-boot:run`. The Maven wrapper supplies Maven.
+
+GitHub Actions validates Angular lint/format/tests/build, Java tests with real PostgreSQL, CDK policies/synthesis, container vulnerability scans and browser/accessibility flows. Actions are pinned and repository permissions are read-only; CI creates no cloud resources. Copilot review guidance is configured in `.github/copilot-instructions.md`; this is not a claim that Copilot implemented existing work.
+
+## Security/configuration
+
+BCrypt cost 12, strong-password and UTF-8 byte validation; HttpOnly/SameSite cookies, configurable Secure flags, CSRF, login session rotation and server-side logout; AES-GCM-encrypted TOTP secrets, replay protection and persistent failed-login lockout; bounded authentication/assistant rate limits and JSON sizes; owner-authorized financial resources and admin audit access; row locks, versions and unique recurrence constraints; expiring one-use hashed recovery tokens that revoke sessions without disabling MFA; safe error messages, request IDs, structured logs, browser headers, non-root application images, private database networking and loopback-only local ports.
+
+Private secrets belong in ignored environment configuration. Local setup generates random database/MFA keys. Public demo passwords and example keys are synthetic test fixtures. Keep an encrypted database backup **and the stable MFA key**.
+
+Before any intentionally shared deployment: private credentials, HTTPS, `COOKIE_SECURE=true`, `DEMO_ENABLED=false`, `API_DOCS_ENABLED=false`, authenticated TLS SMTP and appropriate operational monitoring are manual prerequisites. Local Mailpit captures development email and sends nothing externally.
+
+## AWS and no-spend policy
+
+**No AWS resources have been provisioned.** Local Compose is the permanent $0 path. AWS Free account eligibility is account-specific and temporary; its current Free plan ends after six months or credit exhaustion. It cannot promise permanently free full-stack hosting. [AWS Free account documentation](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/free-tier-plans.html)
+
+The tested offline CDK reference illustrates **EC2, EBS, VPC, IAM, Systems Manager and CloudFormation**, using the same Docker/PostgreSQL stack on one host. It avoids NAT gateways, load balancers, managed databases and paid AI. Deployment commands stop before AWS calls, and every reference resource has a constant-false provisioning condition.
+
+```sh
+npm run synth --prefix infrastructure
+node scripts/deploy-aws.mjs --deploy
+# Expected nonzero exit: provisioning disabled, no AWS call.
 ```
 
-See [TESTING.md](docs/TESTING.md) for verification results and conditions. CI repeats the relevant checks, builds both runtime images, scans them with Trivy, runs the Compose/browser suite, and blocks deployment unless checks pass.
+An optional read-only Free plan checker requires an AWS CLI/account and never authorizes deployment. [AWS instructions](docs/AWS-DEPLOYMENT.md) describe eligibility, expiry and manual prerequisites. Public hosting remains a separate manual decision outside the zero-spend configuration.
 
-## AWS deployment
+## Troubleshooting
 
-The CDK stack defines private S3 delivery through CloudFront, ECR image assets, ECS Fargate tasks behind an HTTPS ALB, private encrypted Multi-AZ RDS PostgreSQL, Secrets Manager integration, CloudWatch logs/alarms, ACM certificate integration, and optional Route 53 records. API caching is disabled and session/CSRF headers are forwarded on the same origin.
+| Symptom | Resolution |
+| --- | --- |
+| Port occupied | Change `.env` ports; leave unrelated applications running. |
+| Database login fails | Volumes retain original credentials; restore matching `.env`. Changing a variable alone does not change PostgreSQL's stored password. |
+| Recovery email missing | Check Mailpit on port 8025 and backend SMTP configuration/health; requests have a one-minute per-account cooldown. |
+| 403 on writes | Refresh the CSRF cookie/token and send `X-XSRF-TOKEN`; reauthenticate expired sessions. |
+| 429/lockout | Wait for the retry period; limits protect auth and assistant requests. |
+| MFA cannot decrypt | Restore the original `MFA_ENCRYPTION_KEY`; rotating it invalidates existing enrollment. |
+| Empty charts | New accounts start empty; record income/expenses or use the synthetic demo. |
+| Native proxy fails | Match `frontend/proxy.conf.json` with the native backend port. |
+| AWS deploy refused | Expected no-spend safeguard; use offline synthesis/local Compose. |
+| CDK audit exception | See the narrow, expiring tooling exception in [AWS instructions](docs/AWS-DEPLOYMENT.md); unexpected high/critical findings block CI. |
 
-AWS resources are **not provisioned by local setup**. Supply an AWS account and deployment role, regional API certificate and origin DNS name, stable MFA secret, CDK bootstrap, and optional custom-domain viewer certificate. Configure GitHub OIDC/environment variables and review the costs before triggering deployment. Detailed prerequisites, deployment, estimated costs, and teardown are in [AWS-DEPLOYMENT.md](docs/AWS-DEPLOYMENT.md).
-
-## More documentation
-
-- [Security](docs/SECURITY.md), [testing](docs/TESTING.md), and [troubleshooting](docs/TROUBLESHOOTING.md)
-- [Code walkthrough](docs/CODE-WALKTHROUGH.md) and [interview guide](docs/INTERVIEW-GUIDE.md)
-- [Resume bullets grounded in the implementation](docs/RESUME-BULLETS.md)
-
-Planning limitations are intentional and documented: no real financial connections, no tax eligibility engine, independently tracked goal amounts, no self-service account/MFA recovery, and no claimed regulatory certification. Cloud deployment and operational recovery exercises require separate account configuration.
+This portfolio application does not establish bank integration, regulatory certification, production customer use, live AWS hosting or guaranteed returns. [Recruiter-friendly résumé bullets](docs/RESUME-BULLETS.md)
