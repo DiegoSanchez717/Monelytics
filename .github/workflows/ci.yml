@@ -15,6 +15,8 @@ concurrency:
 
 jobs:
   frontend:
+    # Skip before runner allocation if the repository becomes private.
+    if: github.event.repository.private == false
     runs-on: ubuntu-24.04
     defaults:
       run:
@@ -24,21 +26,15 @@ jobs:
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: '24.12.0'
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npm run lint
       - run: npm run format:check
       - run: npm test
       - run: npm run build
       - run: npm audit --audit-level=high
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: angular-production
-          path: frontend/dist/monelytics/browser
-          retention-days: 7
 
   backend:
+    if: github.event.repository.private == false
     runs-on: ubuntu-24.04
     defaults:
       run:
@@ -49,19 +45,11 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-          cache: maven
       # Docker on the runner is required: this profile executes real PostgreSQL tests.
       - run: bash ./mvnw --batch-mode --no-transfer-progress verify -Ppostgres-it
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        if: always()
-        with:
-          name: backend-test-reports
-          path: |
-            backend/target/surefire-reports
-            backend/target/failsafe-reports
-          retention-days: 7
 
   infrastructure:
+    if: github.event.repository.private == false
     runs-on: ubuntu-24.04
     defaults:
       run:
@@ -71,23 +59,20 @@ jobs:
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: '24.12.0'
-          cache: npm
-          cache-dependency-path: infrastructure/package-lock.json
       - run: npm ci
       - run: npm test
       - run: npm run synth -- --quiet
       - run: npm run audit
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      # Preserve the raw public dependency evidence in logs without artifact storage.
+      - name: Print unmodified infrastructure dependency audit
         if: always()
-        with:
-          name: infrastructure-dependency-audit
-          path: infrastructure/audit-report.json
-          retention-days: 30
+        run: node -e "const fs = require('node:fs'); if (fs.existsSync('audit-report.json')) process.stdout.write(fs.readFileSync('audit-report.json', 'utf8'));"
       - name: Validate Docker Compose configuration
         run: docker compose --env-file .env.example config --quiet
         working-directory: .
 
   container-security:
+    if: github.event.repository.private == false
     runs-on: ubuntu-24.04
     strategy:
       matrix:
@@ -101,6 +86,7 @@ jobs:
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
         with:
           image-ref: monelytics-${{ matrix.component }}:ci
+          cache: 'false'
           version: 'v0.75.0'
           timeout: '20m'
           scanners: vuln
@@ -109,6 +95,7 @@ jobs:
           exit-code: '1'
 
   end-to-end:
+    if: github.event.repository.private == false
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
@@ -116,8 +103,6 @@ jobs:
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: '24.12.0'
-          cache: npm
-          cache-dependency-path: tests/e2e/package-lock.json
       - name: Configure isolated local demonstration
         run: cp .env.example .env
       - run: docker compose up --build --wait --wait-timeout 300
@@ -130,14 +115,6 @@ jobs:
       - name: Container logs
         if: failure()
         run: docker compose logs --no-color
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        if: failure()
-        with:
-          name: browser-failure-artifacts
-          path: |
-            tests/e2e/playwright-report
-            tests/e2e/test-results
-          retention-days: 7
       - name: Clean disposable CI containers
         if: always()
         run: docker compose down --volumes
