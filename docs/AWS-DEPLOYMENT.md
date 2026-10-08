@@ -18,6 +18,8 @@ node scripts/deploy-aws.mjs
 
 The generated template is `infrastructure/cdk.out/MonelyticsReference.template.json`. Synthesis runs the CDK app directly with environment-agnostic CloudFormation tokens; it performs no account or context lookups and needs no AWS credentials. The build safely cleans only `infrastructure/dist` and `infrastructure/cdk.out`, preventing stale compiled tests or obsolete cloud templates from surviving.
 
+Infrastructure tests also use the Docker Compose CLI to validate effective local/release settings with the synthetic `.env.example`. Those configuration checks create no containers and need no running Docker engine. Synthesis itself requires only the Node/npm dependencies.
+
 Every resource in the template has the constant-false `ProvisioningDisabled` condition. Even submitting that template directly cannot create its reference resources. Tests verify that condition, the absence of inbound access and paid managed services, and the deployment guards. `npm run deploy --prefix infrastructure` and `node scripts/deploy-aws.mjs --deploy` deliberately fail before compilation, credentials or cloud tool execution. CI has no deployment job, OIDC write permission or AWS credentials action. Do not bootstrap CDK or use a separate cloud provisioning tool under this project's zero-spend requirement.
 
 ## CI without metered runner or artifact usage
