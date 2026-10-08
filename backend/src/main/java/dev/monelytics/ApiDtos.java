@@ -71,7 +71,10 @@ public final class ApiDtos {
   public record AccountCreate(
       @NotBlank @Size(max = 100) String name,
       @NotNull AccountType type,
-      @NotNull @DecimalMin("0") @DecimalMax("999999999999.99") @Digits(integer = 12, fraction = 2)
+      @NotNull
+          @DecimalMin("-999999999999.99")
+          @DecimalMax("999999999999.99")
+          @Digits(integer = 12, fraction = 2)
           BigDecimal openingBalance) {}
 
   public record AccountUpdate(@NotBlank @Size(max = 100) String name, @NotNull AccountType type) {}
@@ -107,7 +110,18 @@ public final class ApiDtos {
           @Digits(integer = 12, fraction = 2)
           BigDecimal amount,
       @NotBlank @Size(max = 240) String description,
-      @NotNull @PastOrPresent LocalDate date) {}
+      @NotNull @PastOrPresent LocalDate date,
+      UUID categoryId,
+      UUID destinationAccountId) {
+    public TransactionInput(
+        UUID accountId,
+        TransactionType type,
+        BigDecimal amount,
+        String description,
+        LocalDate date) {
+      this(accountId, type, amount, description, date, null, null);
+    }
+  }
 
   public record TransactionView(
       UUID id,
@@ -116,10 +130,24 @@ public final class ApiDtos {
       TransactionType type,
       BigDecimal amount,
       String description,
-      LocalDate date) {
+      LocalDate date,
+      UUID categoryId,
+      String categoryName,
+      UUID destinationAccountId,
+      String destinationAccountName) {
     static TransactionView of(LedgerTransaction t) {
       return new TransactionView(
-          t.id, t.account.getId(), t.account.getName(), t.type, t.amount, t.description, t.date);
+          t.id,
+          t.account.getId(),
+          t.account.getName(),
+          t.type,
+          t.amount,
+          t.description,
+          t.date,
+          t.category == null ? null : t.category.getId(),
+          t.category == null ? null : t.category.getName(),
+          t.destinationAccount == null ? null : t.destinationAccount.getId(),
+          t.destinationAccount == null ? null : t.destinationAccount.getName());
     }
   }
 
@@ -141,7 +169,7 @@ public final class ApiDtos {
       LocalDate targetDate,
       BigDecimal monthlyContribution,
       BigDecimal expectedReturn) {
-    static GoalView of(RetirementGoal g) {
+    static GoalView of(SavingsGoal g) {
       return new GoalView(
           g.id,
           g.name,
@@ -185,7 +213,17 @@ public final class ApiDtos {
       List<AccountView> accounts,
       List<TransactionView> recentTransactions,
       List<BalancePoint> balanceHistory,
-      List<Allocation> allocation) {}
+      List<Allocation> allocation,
+      String month,
+      BigDecimal income,
+      BigDecimal expenses,
+      BigDecimal cashFlow,
+      BigDecimal savingsRate,
+      List<FinanceDtos.BudgetView> budgets,
+      List<GoalView> goals,
+      List<FinanceDtos.MonthlyTrend> spendingTrends,
+      List<FinanceDtos.CategorySpending> categoryBreakdown,
+      List<FinanceDtos.NotificationView> notifications) {}
 
   public record PageView<T>(
       List<T> content, long totalElements, int totalPages, int number, int size) {}

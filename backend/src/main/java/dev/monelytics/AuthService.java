@@ -17,14 +17,20 @@ class AuthService {
   private final PasswordEncoder passwords;
   private final TotpService totp;
   private final AuditService audit;
+  private final CategoryDefaults categories;
   private final String dummyHash;
 
   AuthService(
-      UserRepository users, PasswordEncoder passwords, TotpService totp, AuditService audit) {
+      UserRepository users,
+      PasswordEncoder passwords,
+      TotpService totp,
+      AuditService audit,
+      CategoryDefaults categories) {
     this.users = users;
     this.passwords = passwords;
     this.totp = totp;
     this.audit = audit;
+    this.categories = categories;
     dummyHash = passwords.encode(UUID.randomUUID().toString());
   }
 
@@ -41,6 +47,7 @@ class AuthService {
     user.email = email;
     user.passwordHash = passwords.encode(input.password());
     users.saveAndFlush(user);
+    categories.seed(user);
     audit.record(user.id, "USER_REGISTERED", user.id, "Account registered");
     return user;
   }

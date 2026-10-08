@@ -6,11 +6,17 @@ import java.time.*;
 import java.util.*;
 
 enum AccountType {
+  CHECKING,
+  SAVINGS,
+  CREDIT_CARD,
   ROTH_IRA,
   TRADITIONAL_IRA
 }
 
 enum TransactionType {
+  INCOME,
+  EXPENSE,
+  TRANSFER,
   CONTRIBUTION,
   WITHDRAWAL,
   ROLLOVER,
@@ -64,8 +70,8 @@ class AppUser {
 }
 
 @Entity
-@Table(name = "ira_accounts")
-class IraAccount {
+@Table(name = "financial_accounts")
+class FinancialAccount {
   public UUID getId() {
     return id;
   }
@@ -109,7 +115,7 @@ class Beneficiary {
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "account_id")
-  IraAccount account;
+  FinancialAccount account;
 
   @Column(nullable = false, length = 100)
   String name;
@@ -128,7 +134,21 @@ class LedgerTransaction {
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "account_id")
-  IraAccount account;
+  FinancialAccount account;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "destination_account_id")
+  FinancialAccount destinationAccount;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "category_id")
+  FinanceCategory category;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "recurring_id")
+  RecurringItem recurring;
+
+  LocalDate recurringDueDate;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 24)
@@ -150,8 +170,8 @@ class LedgerTransaction {
 }
 
 @Entity
-@Table(name = "retirement_goals")
-class RetirementGoal {
+@Table(name = "savings_goals")
+class SavingsGoal {
   @Id UUID id = UUID.randomUUID();
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -167,6 +187,9 @@ class RetirementGoal {
   @Column(nullable = false, precision = 19, scale = 2)
   BigDecimal currentAmount;
 
+  @Column(nullable = false, precision = 19, scale = 2)
+  BigDecimal openingAmount;
+
   @Column(nullable = false)
   LocalDate targetDate;
 
@@ -177,6 +200,150 @@ class RetirementGoal {
   BigDecimal expectedReturn;
 
   @Version long version;
+}
+
+enum CategoryType {
+  INCOME,
+  EXPENSE
+}
+
+enum RecurringKind {
+  BILL,
+  SUBSCRIPTION
+}
+
+enum RecurringFrequency {
+  MONTHLY,
+  YEARLY
+}
+
+@Entity
+@Table(name = "finance_categories")
+class FinanceCategory {
+  @Id UUID id = UUID.randomUUID();
+
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "user_id")
+  AppUser user;
+
+  @Column(nullable = false, length = 80)
+  String name;
+
+  @Column(nullable = false, length = 80)
+  String nameKey;
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false, length = 12)
+  CategoryType type;
+
+  @Column(nullable = false, length = 7)
+  String color;
+
+  public UUID getId() {
+    return id;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public String getColor() {
+    return color;
+  }
+
+  public CategoryType getType() {
+    return type;
+  }
+}
+
+@Entity
+@Table(name = "monthly_budgets")
+class MonthlyBudget {
+  @Id UUID id = UUID.randomUUID();
+
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "user_id")
+  AppUser user;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "category_id")
+  FinanceCategory category;
+
+  @Column(name = "budget_month", nullable = false, length = 7)
+  String month;
+
+  @Column(nullable = false, length = 36)
+  String scopeKey;
+
+  @Column(nullable = false, precision = 19, scale = 2)
+  BigDecimal limitAmount;
+
+  @Version long version;
+}
+
+@Entity
+@Table(name = "recurring_items")
+class RecurringItem {
+  @Id UUID id = UUID.randomUUID();
+
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "user_id")
+  AppUser user;
+
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "account_id")
+  FinancialAccount account;
+
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "category_id")
+  FinanceCategory category;
+
+  @Column(nullable = false, length = 100)
+  String name;
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false, length = 16)
+  RecurringKind kind;
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false, length = 16)
+  RecurringFrequency frequency;
+
+  @Column(nullable = false, precision = 19, scale = 2)
+  BigDecimal amount;
+
+  @Column(nullable = false)
+  LocalDate nextDueDate;
+
+  @Column(nullable = false)
+  int anchorDay;
+
+  @Column(nullable = false)
+  boolean active;
+
+  @Version long version;
+}
+
+@Entity
+@Table(name = "goal_contributions")
+class GoalContribution {
+  @Id UUID id = UUID.randomUUID();
+
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "goal_id")
+  SavingsGoal goal;
+
+  @Column(nullable = false, precision = 19, scale = 2)
+  BigDecimal amount;
+
+  @Column(name = "contribution_date", nullable = false)
+  LocalDate date;
+
+  @Column(nullable = false, length = 240)
+  String note;
+
+  @Column(nullable = false)
+  Instant createdAt = Instant.now();
 }
 
 @Entity

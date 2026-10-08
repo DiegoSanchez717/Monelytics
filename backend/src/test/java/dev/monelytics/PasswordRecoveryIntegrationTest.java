@@ -1,9 +1,9 @@
 package dev.monelytics;
 
+import static dev.monelytics.ApiTestSupport.realCsrf;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -37,7 +37,7 @@ class PasswordRecoveryIntegrationTest {
     String email = "unknown-" + UUID.randomUUID() + "@test.dev";
     mvc.perform(
             post("/api/auth/forgot-password")
-                .with(csrf())
+                .with(realCsrf(mvc, json))
                 .contentType("application/json")
                 .content(json.writeValueAsString(Map.of("email", email))))
         .andExpect(status().isOk())
@@ -64,7 +64,7 @@ class PasswordRecoveryIntegrationTest {
     assertThat(resets.findByTokenHash(token)).isEmpty();
     mvc.perform(
             post("/api/auth/reset-password")
-                .with(csrf())
+                .with(realCsrf(mvc, json))
                 .cookie(session)
                 .contentType("application/json")
                 .content(json.writeValueAsString(Map.of("token", token, "password", nextPassword))))
@@ -73,13 +73,13 @@ class PasswordRecoveryIntegrationTest {
     assertThat(users.findByEmail(email).orElseThrow().mfaEnabled).isTrue();
     mvc.perform(
             post("/api/auth/reset-password")
-                .with(csrf())
+                .with(realCsrf(mvc, json))
                 .contentType("application/json")
                 .content(json.writeValueAsString(Map.of("token", token, "password", nextPassword))))
         .andExpect(status().isUnprocessableEntity());
     mvc.perform(
             post("/api/auth/login")
-                .with(csrf())
+                .with(realCsrf(mvc, json))
                 .contentType("application/json")
                 .content(json.writeValueAsString(Map.of("email", email, "password", nextPassword))))
         .andExpect(status().isUnauthorized())
@@ -95,7 +95,7 @@ class PasswordRecoveryIntegrationTest {
     verify(mail, times(1)).send(eq(email), anyString());
     mvc.perform(
             post("/api/auth/reset-password")
-                .with(csrf())
+                .with(realCsrf(mvc, json))
                 .contentType("application/json")
                 .content(json.writeValueAsString(Map.of("token", token, "password", "weak"))))
         .andExpect(status().isBadRequest());
@@ -104,7 +104,7 @@ class PasswordRecoveryIntegrationTest {
     resets.save(reset);
     mvc.perform(
             post("/api/auth/reset-password")
-                .with(csrf())
+                .with(realCsrf(mvc, json))
                 .contentType("application/json")
                 .content(json.writeValueAsString(Map.of("token", token, "password", nextPassword))))
         .andExpect(status().isUnprocessableEntity())
@@ -122,14 +122,14 @@ class PasswordRecoveryIntegrationTest {
     requestAgain(email);
     mvc.perform(
             post("/api/auth/reset-password")
-                .with(csrf())
+                .with(realCsrf(mvc, json))
                 .contentType("application/json")
                 .content(json.writeValueAsString(Map.of("token", old, "password", nextPassword))))
         .andExpect(status().isUnprocessableEntity())
         .andExpect(jsonPath("$.detail").value(PasswordRecoveryService.INVALID_MESSAGE));
     mvc.perform(
             post("/api/auth/reset-password")
-                .with(csrf())
+                .with(realCsrf(mvc, json))
                 .contentType("application/json")
                 .content(
                     json.writeValueAsString(
@@ -142,7 +142,7 @@ class PasswordRecoveryIntegrationTest {
     var result =
         mvc.perform(
                 post("/api/auth/register")
-                    .with(csrf())
+                    .with(realCsrf(mvc, json))
                     .contentType("application/json")
                     .content(
                         json.writeValueAsString(
@@ -166,7 +166,7 @@ class PasswordRecoveryIntegrationTest {
   private void requestAgain(String email) throws Exception {
     mvc.perform(
             post("/api/auth/forgot-password")
-                .with(csrf())
+                .with(realCsrf(mvc, json))
                 .contentType("application/json")
                 .content(json.writeValueAsString(Map.of("email", email))))
         .andExpect(status().isOk())

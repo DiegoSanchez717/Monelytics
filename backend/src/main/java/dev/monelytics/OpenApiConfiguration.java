@@ -15,7 +15,7 @@ class OpenApiConfiguration {
                 .title("Monelytics API")
                 .version("1.0.0")
                 .description(
-                    "Retirement portfolio tracking. Authenticate with /api/auth/login. Retrieve /api/auth/csrf before any mutation and refresh it after login/logout. Monetary values are USD. Projections and configurable contribution policies are educational assumptions."))
+                    "Personal finance accounts, transactions, budgets, bills, savings, and a read-only educational assistant. Authenticate with /api/auth/login. Retrieve /api/auth/csrf before mutations and refresh after login/logout. Monetary values are USD; assessments are educational, not professional financial advice."))
         .components(
             new Components()
                 .addSecuritySchemes(
