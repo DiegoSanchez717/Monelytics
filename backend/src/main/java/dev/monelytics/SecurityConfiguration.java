@@ -179,6 +179,7 @@ class RequestContextFilter extends OncePerRequestFilter {
               || request.getRequestURI().equals("/api/auth/register")
               || request.getRequestURI().equals("/api/auth/forgot-password")
               || request.getRequestURI().equals("/api/auth/reset-password")
+              || request.getRequestURI().equals("/api/assistant/chat")
               || request.getRequestURI().startsWith("/api/auth/mfa/"))) {
         long now = System.currentTimeMillis();
         // Bounded, per-instance protection complements durable account lockout; deploy an edge rate
@@ -192,12 +193,14 @@ class RequestContextFilter extends OncePerRequestFilter {
         }
         Window w =
             attempts.compute(
-                request.getRemoteAddr(),
+                (request.getRequestURI().equals("/api/assistant/chat") ? "assistant:" : "auth:")
+                    + request.getRemoteAddr(),
                 (key, old) ->
                     old == null || now - old.started > 900000
                         ? new Window(now, 1)
                         : new Window(old.started, old.count + 1));
-        if (w.count > 30) {
+        int limit = request.getRequestURI().equals("/api/assistant/chat") ? 20 : 30;
+        if (w.count > limit) {
           response.setHeader("Retry-After", "900");
           SecurityConfiguration.securityProblem(
               mapper,
@@ -205,7 +208,7 @@ class RequestContextFilter extends OncePerRequestFilter {
               response,
               429,
               "RATE_LIMITED",
-              "Too many sign-in attempts. Try again in 15 minutes.");
+              "Too many requests. Try again in 15 minutes.");
           return;
         }
       }

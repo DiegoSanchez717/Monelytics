@@ -23,11 +23,17 @@
           >Budgets</a
         ><a routerLink="/bills" routerLinkActive="active" (click)="mobileOpen.set(false)">Bills</a
         ><a routerLink="/goals" routerLinkActive="active" (click)="mobileOpen.set(false)">Goals</a>
-        <details class="nav-more" [open]="moreOpen()">
+        <details class="nav-more" [open]="moreOpen() || mobileOpen()">
           <summary (click)="$event.preventDefault(); moreOpen.set(!moreOpen())">
             More <ml-icon name="chevron" />
           </summary>
           <div class="nav-more-menu">
+            <a
+              routerLink="/assistant"
+              routerLinkActive="active"
+              (click)="mobileOpen.set(false); moreOpen.set(false)"
+              ><ml-icon name="sparkles" /> Assistant</a
+            >
             <a
               routerLink="/accounts"
               routerLinkActive="active"

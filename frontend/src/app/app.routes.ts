@@ -81,6 +81,12 @@ export const routes: Routes = [
     title: 'Reports · Monelytics',
   },
   {
+    path: 'assistant',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/assistant.component').then((m) => m.AssistantComponent),
+    title: 'Financial assistant · Monelytics',
+  },
+  {
     path: 'settings',
     canActivate: [authGuard],
     loadComponent: () => import('./features/settings.component').then((m) => m.SettingsComponent),

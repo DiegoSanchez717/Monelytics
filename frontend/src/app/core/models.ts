@@ -160,3 +160,24 @@ export interface AuditEntry {
   detail: string;
   occurredAt: string;
 }
+export interface AssistantQuestion {
+  question: string;
+  purchaseAmount?: number;
+  categoryId?: string;
+  month?: string;
+}
+export interface AssistantReply {
+  answer: string;
+  provider: 'MOCK' | 'LOCAL';
+  decision:
+    | 'NOT_REQUESTED'
+    | 'LIKELY_AFFORDABLE'
+    | 'CAUTION'
+    | 'NOT_AFFORDABLE'
+    | 'INSUFFICIENT_DATA';
+  factors: { label: string; value: number; explanation: string }[];
+  recommendations: string[];
+  disclaimer: string;
+  readOnly: true;
+  asOf: string;
+}

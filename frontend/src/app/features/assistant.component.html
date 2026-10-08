@@ -1,0 +1,197 @@
+<div class="page-heading">
+  <div>
+    <span class="eyebrow">A THOUGHTFUL SECOND LOOK</span>
+    <h1>A little guidance. <span>A clearer next step.</span></h1>
+    <p>Explore your money questions with the facts behind your plan.</p>
+  </div>
+  <span class="pill teal"><ml-icon name="shield" /> Read-only guidance</span>
+</div>
+<div class="assistant-layout">
+  <p class="sr-only" role="status" aria-live="polite">{{ announcement() }}</p>
+  <section class="card section-card assistant-form-card" aria-labelledby="assistant-form-title">
+    <div class="card-heading">
+      <div>
+        <span class="eyebrow">LET’S THINK IT THROUGH</span>
+        <h2 id="assistant-form-title">Ask your financial assistant</h2>
+      </div>
+      <span class="circle-icon teal"><ml-icon name="sparkles" /></span>
+    </div>
+    <p class="assistant-intro">
+      A purchase, a savings goal, or the everyday. Start with what is on your mind.
+    </p>
+    <div class="assistant-examples" aria-label="Example questions">
+      @for (example of examples; track example.title; let index = $index) {
+        <button type="button" (click)="chooseExample(index)">
+          <ml-icon [name]="index === 0 ? 'card' : index === 1 ? 'leaf' : 'bill'" />{{ example.title
+          }}<ml-icon name="arrow" />
+        </button>
+      }
+    </div>
+    @if (error()) {
+      <div id="assistant-error" class="alert error" role="alert">{{ error() }}</div>
+    }
+    <form [formGroup]="form" (ngSubmit)="ask()" novalidate>
+      <label for="assistant-question">Your question</label
+      ><textarea
+        id="assistant-question"
+        formControlName="question"
+        rows="4"
+        maxlength="1200"
+        placeholder="Could I fit a weekend trip into this month’s budget?"
+        [attr.aria-invalid]="form.controls.question.invalid && form.controls.question.touched"
+        aria-describedby="assistant-question-help"
+      ></textarea>
+      <div id="assistant-question-help" class="assistant-field-meta">
+        <span>Keep private account numbers out of your question.</span
+        ><span>{{ form.controls.question.value.length }} / 1200</span>
+      </div>
+      <div class="form-row">
+        <label
+          >Purchase amount ($, optional)<input
+            type="number"
+            formControlName="purchaseAmount"
+            min=".01"
+            max="100000000"
+            step=".01"
+            placeholder="200.00"
+            aria-describedby="purchase-help" /></label
+        ><label>Planning month<input type="month" formControlName="month" /></label>
+      </div>
+      <p id="purchase-help" class="field-help">
+        Include a price for an affordability check. Leave it empty for general guidance.
+      </p>
+      <label
+        >Purchase category (optional)<select formControlName="categoryId">
+          <option value="">No category selected</option>
+          @for (category of categories(); track category.id) {
+            <option [value]="category.id">{{ category.name }}</option>
+          }
+        </select></label
+      >
+      @if (categoriesLoading()) {
+        <p class="field-help" role="status">Loading your expense categories…</p>
+      } @else if (categoriesError()) {
+        <p class="field-error">{{ categoriesError() }}</p>
+        <button type="button" class="text-button" (click)="loadCategories()">
+          Retry categories
+        </button>
+      } @else {
+        <p class="field-help">
+          A category lets the assistant include that category’s remaining budget.
+        </p>
+      }
+      <button class="button primary full" [disabled]="loading()">
+        <ml-icon name="sparkles" />{{ loading() ? 'Thinking it through…' : 'Ask assistant'
+        }}<ml-icon name="arrow" />
+      </button>
+    </form>
+    <div class="assistant-privacy-note">
+      <ml-icon name="lock" />
+      <p>
+        Account facts stay on the server. The assistant can read your recorded plan and cannot add
+        transactions or move money.
+      </p>
+    </div>
+  </section>
+  <div class="assistant-answer-area" [attr.aria-busy]="loading()">
+    @if (loading()) {
+      <section class="card assistant-loading" role="status">
+        <span class="assistant-emblem"><ml-icon name="sparkles" /></span>
+        <h2>A little thought, a little clarity.</h2>
+        <p>Checking your recorded income, expenses, budgets, and commitments.</p>
+        <div class="assistant-loading-line" aria-hidden="true"></div>
+      </section>
+    } @else if (reply(); as answer) {
+      <section class="card section-card assistant-reply" aria-labelledby="assistant-reply-title">
+        <div class="assistant-reply-top">
+          <span class="circle-icon teal"><ml-icon name="sparkles" /></span>
+          <div>
+            <span class="eyebrow">YOUR FINANCIAL PICTURE</span>
+            <h2 id="assistant-reply-title">Here’s a little perspective.</h2>
+          </div>
+          <span class="pill neutral">{{
+            answer.provider === 'MOCK' ? 'Demo assistant' : 'Local assistant'
+          }}</span>
+        </div>
+        <div class="assistant-question-quote">
+          <ml-icon name="chat" />
+          <p>{{ askedQuestion() }}</p>
+        </div>
+        <div
+          class="assistant-decision"
+          [class.caution]="answer.decision === 'CAUTION' || answer.decision === 'INSUFFICIENT_DATA'"
+          [class.warning]="answer.decision === 'NOT_AFFORDABLE'"
+        >
+          <ml-icon
+            [name]="
+              answer.decision === 'LIKELY_AFFORDABLE'
+                ? 'check'
+                : answer.decision === 'NOT_REQUESTED'
+                  ? 'info'
+                  : 'shield'
+            "
+          /><strong>{{ decisionLabel(answer) }}</strong>
+        </div>
+        <p class="assistant-answer">{{ answer.answer }}</p>
+        <div class="assistant-factors-heading">
+          <h3>The facts behind the guidance</h3>
+          <span>USD · recorded information</span>
+        </div>
+        <div class="assistant-factors">
+          @for (factor of answer.factors; track factor.label) {
+            <article class="assistant-factor">
+              <span>{{ factor.label }}</span
+              ><strong [class.negative]="factor.value < 0">{{ factor.value | currency }}</strong>
+              <p>{{ factor.explanation }}</p>
+            </article>
+          }
+        </div>
+        @if (answer.recommendations.length) {
+          <div class="assistant-next-steps">
+            <h3>A few thoughtful next steps</h3>
+            <ul>
+              @for (recommendation of answer.recommendations; track recommendation) {
+                <li>
+                  <ml-icon name="arrow" /><span>{{ recommendation }}</span>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+        <div class="assistant-disclaimer">
+          <ml-icon name="info" />
+          <p>{{ answer.disclaimer }}</p>
+        </div>
+        <div class="assistant-reply-foot">
+          <span><ml-icon name="shield" /> Read-only · no transactions performed</span
+          ><span>{{ answer.asOf | date: 'MMM d, y, h:mm a' }}</span>
+        </div>
+      </section>
+    } @else {
+      <section class="card assistant-welcome">
+        <span class="assistant-emblem"><ml-icon name="sparkles" /></span
+        ><span class="eyebrow">YOUR MONEY. A LITTLE MORE CLARITY.</span>
+        <h2>Make space for a<br /><span>thoughtful decision.</span></h2>
+        <p>
+          Get a second look at the spending, bills, and savings goals behind your everyday choices.
+        </p>
+        <div class="assistant-welcome-checks">
+          <span><ml-icon name="check" /> Based on your recorded information</span
+          ><span><ml-icon name="check" /> Clear factors, no invented balances</span
+          ><span><ml-icon name="check" /> No paid API in the default demo</span>
+        </div>
+        <div class="assistant-welcome-links">
+          <a routerLink="/budgets" class="text-link">Review your budgets <ml-icon name="arrow" /></a
+          ><a routerLink="/goals" class="text-link"
+            >Explore savings goals <ml-icon name="arrow"
+          /></a>
+        </div>
+      </section>
+    }
+  </div>
+</div>
+<p class="financial-note">
+  Educational guidance only. Your records may be incomplete or out of date. Consider your
+  circumstances before making financial decisions; Monelytics is a recordkeeping application and
+  never holds or transfers funds.
+</p>

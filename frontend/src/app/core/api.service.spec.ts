@@ -48,6 +48,20 @@ describe('REST communication', () => {
     request.flush({ month: '2026-10', income: 100, expenses: 30 });
     expect((await promise).income).toBe(100);
   });
+  it('posts assistant context to the read-only API endpoint', async () => {
+    const context = {
+      question: 'Could this purchase fit?',
+      purchaseAmount: 200,
+      categoryId: 'groceries',
+      month: '2026-10',
+    };
+    const promise = api.askAssistant(context);
+    const request = http.expectOne('/api/assistant/chat');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual(context);
+    request.flush({ provider: 'MOCK', readOnly: true, answer: 'Review your recorded budget.' });
+    expect((await promise).readOnly).toBe(true);
+  });
   it('exports all matching transactions as a CSV blob with category filters', async () => {
     const promise = api.exportTransactions({
       categoryId: 'expense-category',

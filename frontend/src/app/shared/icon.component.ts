@@ -31,6 +31,7 @@ const paths: Record<string, string> = {
   bell: 'M18 8a6 6 0 0 0-12 0v5l-2 3h16l-2-3zm-8 12h4',
   sparkles: 'm12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5zm7-1v4m-2-2h4',
   card: 'M3 5h18v14H3zm0 4h18M7 15h4',
+  chat: 'M4 4h16v12H9l-5 4zm4 5h8m-8 3h5',
 };
 @Component({
   selector: 'ml-icon',

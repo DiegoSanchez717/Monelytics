@@ -3,6 +3,8 @@ import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import {
   Account,
+  AssistantQuestion,
+  AssistantReply,
   Analytics,
   AuditEntry,
   Budget,
@@ -86,6 +88,11 @@ export class ApiService {
         responseType: 'blob',
       }),
     );
+  }
+  askAssistant(question: AssistantQuestion): Promise<AssistantReply> {
+    // Questions are evaluated by the server against this user's recorded data.
+    // The assistant endpoint has no permission to write to the ledger.
+    return this.save<AssistantReply>('/assistant/chat', question);
   }
   audit(page: number): Promise<Page<AuditEntry>> {
     return this.get<Page<AuditEntry>>('/audit', {
