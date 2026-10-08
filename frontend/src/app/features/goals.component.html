@@ -1,0 +1,291 @@
+<div class="page-heading">
+  <div>
+    <span class="eyebrow">GIVE YOUR FUTURE A DIRECTION</span>
+    <h1>Dream it. <span>Plan it.</span></h1>
+    <p>Turn your retirement vision into a path you can follow.</p>
+  </div>
+  <button class="button primary" (click)="open()"><wp-icon name="plus" /> Create a goal</button>
+</div>
+@if (success()) {
+  <div class="alert success" role="status"><wp-icon name="check" />{{ success() }}</div>
+}
+<section class="card calculator-card">
+  <div class="card-heading">
+    <div>
+      <span class="eyebrow">A LOOK AHEAD</span>
+      <h2>Your retirement calculator</h2>
+      <p class="muted">Explore the power of consistent contributions.</p>
+    </div>
+    <span class="circle-icon teal"><wp-icon name="target" /></span>
+  </div>
+  <div class="calculator-layout">
+    <form [formGroup]="calculator" (ngSubmit)="calculate()" class="calculator-form" novalidate>
+      <div class="form-row">
+        <label
+          >Current age<input
+            type="number"
+            formControlName="currentAge"
+            min="18"
+            max="90"
+            step="1" /></label
+        ><label
+          >Retirement age<input
+            type="number"
+            formControlName="retirementAge"
+            min="19"
+            max="100"
+            step="1"
+        /></label>
+      </div>
+      @if (calculator.hasError('ageOrder') && calculator.touched) {
+        <span class="field-error">Retirement age must be later than your current age.</span>
+      }
+      <label
+        >Current savings ($)<input
+          type="number"
+          formControlName="currentSavings"
+          min="0"
+          max="100000000"
+          step=".01" /></label
+      ><label
+        >Monthly contribution ($)<input
+          type="number"
+          formControlName="monthlyContribution"
+          min="0"
+          max="100000"
+          step=".01"
+      /></label>
+      <div class="form-row">
+        <label
+          >Annual return (%)<input
+            type="number"
+            formControlName="annualReturn"
+            min="0"
+            max="20"
+            step=".1" /></label
+        ><label
+          >Target balance ($)<input
+            type="number"
+            formControlName="targetAmount"
+            min="1"
+            max="100000000"
+            step=".01"
+        /></label>
+      </div>
+      @if (calculator.invalid && calculator.touched) {
+        <span class="field-error"
+          >Enter valid values. Ages must be whole numbers; annual return is between 0% and
+          20%.</span
+        >
+      }
+      <button class="button primary full" [disabled]="calculating()">
+        {{ calculating() ? 'Calculating…' : 'Explore my projection' }}<wp-icon name="arrow" />
+      </button>
+    </form>
+    <div class="calculator-result">
+      @if (calcError()) {
+        <div class="alert error" role="alert">{{ calcError() }}</div>
+      }
+      @if (projection(); as p) {
+        <div class="projection-top">
+          <span class="label">Your projected retirement balance</span
+          ><strong>{{ p.projectedBalance | currency: 'USD' : 'symbol' : '1.0-0' }}</strong
+          ><span class="pill" [class.teal]="p.gap <= 0" [class.coral]="p.gap > 0">{{
+            p.gap <= 0 ? 'Your scenario reaches your target' : 'Room to build toward your target'
+          }}</span>
+        </div>
+        <wp-chart
+          [values]="projectionValues()"
+          [labels]="projectionLabels()"
+          label="Estimated retirement balance by age"
+        />
+        <div class="projection-stats">
+          <div>
+            <span>Contributions & initial savings</span
+            ><strong>{{ p.totalContributions | currency: 'USD' : 'symbol' : '1.0-0' }}</strong>
+          </div>
+          <div>
+            <span>Estimated investment growth</span
+            ><strong class="positive">{{
+              p.investmentGrowth | currency: 'USD' : 'symbol' : '1.0-0'
+            }}</strong>
+          </div>
+        </div>
+        <div class="projection-insight">
+          <wp-icon name="leaf" />
+          <p>
+            To reach your target, this scenario calls for approximately
+            <strong>{{ p.monthlyNeeded | currency: 'USD' : 'symbol' : '1.0-0' }} per month</strong>.
+            Use this as a starting point for your plan.
+          </p>
+        </div>
+      } @else {
+        <wp-state
+          title="Imagine your next chapter"
+          description="Enter your savings and contribution plan to explore a retirement projection."
+          icon="target"
+        />
+      }
+    </div>
+  </div>
+  <p class="financial-note">
+    Estimates use monthly compounding with contributions at the end of each month. Returns are
+    hypothetical and exclude taxes, fees, and inflation. Actual results will vary. IRA eligibility
+    and contribution limits still apply.
+  </p>
+</section>
+<div class="section-heading-row">
+  <div>
+    <span class="eyebrow">MILESTONES THAT MATTER</span>
+    <h2>Your retirement goals</h2>
+  </div>
+  <span class="muted">One step closer, every day.</span>
+</div>
+@if (loading() || error()) {
+  <wp-state [loading]="loading()" [error]="error()" (retry)="load()" />
+} @else {
+  <section class="goals-grid">
+    @for (goal of goals(); track goal.id) {
+      <article class="card goal-card">
+        <div class="goal-top">
+          <span class="circle-icon teal"><wp-icon name="target" /></span
+          ><span class="pill neutral">{{ percent(goal) | number: '1.0-0' }}% there</span>
+        </div>
+        <h2>{{ goal.name }}</h2>
+        <div class="goal-money">
+          <strong>{{ goal.currentAmount | currency: 'USD' : 'symbol' : '1.0-0' }}</strong
+          ><span>of {{ goal.targetAmount | currency: 'USD' : 'symbol' : '1.0-0' }}</span>
+        </div>
+        <div class="progress-track">
+          <span [style.width.%]="percent(goal)"></span>
+        </div>
+        <div class="goal-details">
+          <div>
+            <span>Target date</span><strong>{{ goal.targetDate | date: 'MMMM y' }}</strong>
+          </div>
+          <div>
+            <span>Monthly plan</span
+            ><strong>{{ goal.monthlyContribution | currency: 'USD' : 'symbol' : '1.0-0' }}</strong>
+          </div>
+          <div>
+            <span>Assumed annual return</span
+            ><strong>{{ goal.expectedReturn | number: '1.0-2' }}%</strong>
+          </div>
+        </div>
+        <div class="account-actions">
+          <button class="button secondary small" (click)="open(goal)">
+            <wp-icon name="edit" /> Update goal</button
+          ><button
+            class="icon-button danger"
+            (click)="deleting.set(goal); formError.set('')"
+            [attr.aria-label]="'Remove ' + goal.name"
+          >
+            <wp-icon name="trash" />
+          </button>
+        </div>
+      </article>
+    } @empty {
+      <div class="card full-span">
+        <wp-state
+          title="A destination makes all the difference"
+          description="Create a goal and give your retirement savings a purpose."
+          icon="target"
+          ><button class="button primary" (click)="open()">Create your first goal</button></wp-state
+        >
+      </div>
+    }
+  </section>
+}
+@if (editing()) {
+  <wp-dialog
+    [title]="selected() ? 'Update your goal' : 'Create a retirement goal'"
+    (closed)="editing.set(false)"
+  >
+    @if (formError()) {
+      <div class="alert error" role="alert">{{ formError() }}</div>
+    }
+    <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <label
+        >Goal name<input
+          formControlName="name"
+          maxlength="100"
+          placeholder="Retire with freedom"
+        /><span class="field-error" [hidden]="!invalid('name')"
+          >Name your goal (up to 100 characters).</span
+        ></label
+      >
+      <div class="form-row">
+        <label
+          >Target amount ($)<input
+            type="number"
+            formControlName="targetAmount"
+            min="1"
+            max="100000000"
+            step=".01" /></label
+        ><label
+          >Saved so far ($)<input
+            type="number"
+            formControlName="currentAmount"
+            min="0"
+            max="100000000"
+            step=".01"
+        /></label>
+      </div>
+      <label
+        >Target date<input type="date" formControlName="targetDate" /><span
+          class="field-error"
+          [hidden]="!invalid('targetDate')"
+          >Choose a target date.</span
+        ></label
+      >
+      <div class="form-row">
+        <label
+          >Monthly contribution ($)<input
+            type="number"
+            formControlName="monthlyContribution"
+            min="0"
+            max="100000"
+            step=".01" /></label
+        ><label
+          >Expected annual return (%)<input
+            type="number"
+            formControlName="expectedReturn"
+            min="0"
+            max="20"
+            step=".1"
+        /></label>
+      </div>
+      @if (form.invalid && form.touched) {
+        <span class="field-error"
+          >Enter valid positive amounts and a return between 0% and 20%.</span
+        >
+      }
+      <p class="field-help">
+        Your goal’s saved amount is tracked independently. Update it as your savings grow.
+      </p>
+      <div class="dialog-actions">
+        <button type="button" class="button secondary" (click)="editing.set(false)">Cancel</button
+        ><button class="button primary" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : 'Save goal' }}
+        </button>
+      </div>
+    </form></wp-dialog
+  >
+}
+@if (deleting(); as goal) {
+  <wp-dialog title="Remove this goal?" (closed)="deleting.set(null)"
+    ><p>
+      This removes <strong>{{ goal.name }}</strong
+      >. Your IRA balances and transactions are unchanged.
+    </p>
+    @if (formError()) {
+      <div class="alert error" role="alert">{{ formError() }}</div>
+    }
+    <div class="dialog-actions">
+      <button class="button secondary" (click)="deleting.set(null)">Keep goal</button
+      ><button class="button danger-button" [disabled]="saving()" (click)="remove()">
+        {{ saving() ? 'Removing…' : 'Remove goal' }}
+      </button>
+    </div></wp-dialog
+  >
+}

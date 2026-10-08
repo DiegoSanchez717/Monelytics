@@ -1,0 +1,68 @@
+spring:
+  application:
+    name: wealthpath-api
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/wealthpath}
+    username: ${DATABASE_USERNAME:wealthpath}
+    password: ${DATABASE_PASSWORD}
+    hikari:
+      maximum-pool-size: ${DATABASE_POOL_SIZE:10}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.jdbc.time_zone: UTC
+  flyway:
+    enabled: true
+  session:
+    timeout: 30m
+    jdbc:
+      initialize-schema: never
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+  web:
+    error:
+      include-message: never
+      include-stacktrace: never
+server:
+  port: ${PORT:8080}
+  forward-headers-strategy: framework
+  servlet:
+    session:
+      timeout: 30m
+      cookie:
+        name: WEALTHPATH_SESSION
+        http-only: true
+        secure: ${COOKIE_SECURE:false}
+        same-site: lax
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState,db
+logging:
+  structured:
+    format:
+      console: logstash
+wealthpath:
+  demo-enabled: ${DEMO_ENABLED:false}
+  demo-password: ${DEMO_PASSWORD:DemoPath!2026}
+  admin-password: ${ADMIN_PASSWORD:AdminPath!2026}
+  contribution-limit: ${CONTRIBUTION_LIMIT:7000}
+  mfa-encryption-key: ${MFA_ENCRYPTION_KEY}
+  cookie-secure: ${COOKIE_SECURE:false}
+springdoc:
+  api-docs:
+    enabled: ${API_DOCS_ENABLED:true}
+  swagger-ui:
+    enabled: ${API_DOCS_ENABLED:true}

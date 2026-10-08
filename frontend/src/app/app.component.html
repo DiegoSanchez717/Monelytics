@@ -1,0 +1,74 @@
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="app-frame">
+  <header class="topbar">
+    <a class="brand" [routerLink]="auth.user() ? '/dashboard' : '/'" aria-label="WealthPath home"
+      ><span class="brand-mark"
+        ><svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path
+            d="m5 8 5 16 6-12 6 12 5-16"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          /></svg></span
+      ><span>Wealth<span class="brand-path">Path</span></span></a
+    >
+    @if (auth.user()) {
+      <nav class="main-nav" [class.open]="mobileOpen()" aria-label="Main navigation">
+        <a routerLink="/dashboard" routerLinkActive="active" (click)="mobileOpen.set(false)"
+          >Overview</a
+        ><a routerLink="/accounts" routerLinkActive="active" (click)="mobileOpen.set(false)"
+          >Accounts</a
+        ><a routerLink="/transactions" routerLinkActive="active" (click)="mobileOpen.set(false)"
+          >Transactions</a
+        ><a routerLink="/goals" routerLinkActive="active" (click)="mobileOpen.set(false)">Goals</a>
+        @if (auth.user()?.role === 'ADMIN') {
+          <a routerLink="/admin" routerLinkActive="active" (click)="mobileOpen.set(false)"
+            >Audit log</a
+          >
+        }
+      </nav>
+      <div class="nav-actions">
+        <a
+          class="icon-button"
+          routerLink="/settings"
+          routerLinkActive="active"
+          aria-label="Settings"
+          ><wp-icon name="settings" /></a
+        ><span class="nav-divider"></span
+        ><a
+          routerLink="/settings"
+          class="avatar"
+          [attr.aria-label]="'Profile for ' + auth.user()?.firstName"
+          >{{ auth.user()?.firstName?.charAt(0) }}{{ auth.user()?.lastName?.charAt(0) }}</a
+        ><button class="icon-button logout" (click)="logout()" aria-label="Sign out">
+          <wp-icon name="logout" /></button
+        ><button
+          class="icon-button mobile-toggle"
+          (click)="mobileOpen.set(!mobileOpen())"
+          [attr.aria-expanded]="mobileOpen()"
+          aria-label="Toggle navigation"
+        >
+          <wp-icon name="menu" />
+        </button>
+      </div>
+    } @else {
+      <nav class="public-nav" aria-label="Public navigation">
+        <a href="/#how-it-works">How it works</a><a href="/#security">Built for peace of mind</a
+        ><a routerLink="/login">Sign in</a
+        ><a routerLink="/register" class="button small primary"
+          >Get started <wp-icon name="arrow"
+        /></a>
+      </nav>
+    }
+  </header>
+  @if (logoutError()) {
+    <div class="alert error" role="alert">{{ logoutError() }}</div>
+  }
+  <main id="main" tabindex="-1"><router-outlet /></main>
+  <footer class="footer">
+    <span class="footer-brand">WealthPath <span>· A clearer financial future.</span></span
+    ><span>Thoughtfully planned. Confidently ahead.</span
+    ><span class="footer-status"><i></i> Your data. Your control.</span>
+  </footer>
+</div>

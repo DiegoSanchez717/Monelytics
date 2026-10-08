@@ -1,0 +1,12 @@
+<dialog #dialog (cancel)="cancel($event)" [attr.aria-label]="title()">
+  <div class="dialog-heading">
+    <div>
+      <span class="eyebrow">YOUR WEALTH PATH</span>
+      <h2>{{ title() }}</h2>
+    </div>
+    <button type="button" class="icon-button" (click)="closed.emit()" aria-label="Close dialog">
+      <wp-icon name="close" />
+    </button>
+  </div>
+  <ng-content />
+</dialog>

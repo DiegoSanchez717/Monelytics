@@ -1,0 +1,24 @@
+dialog {
+  border: 1px solid #dde8e9;
+  border-radius: 22px;
+  padding: 28px;
+  width: min(560px, calc(100vw - 32px));
+  max-height: 90dvh;
+  color: var(--ink);
+  background: #fff;
+  box-shadow: 0 30px 100px #12323b30;
+}
+dialog::backdrop {
+  background: #102f3655;
+  backdrop-filter: blur(5px);
+}
+.dialog-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+.dialog-heading h2 {
+  margin: 8px 0 0;
+  font-size: 24px;
+}

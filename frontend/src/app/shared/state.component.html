@@ -1,0 +1,19 @@
+@if (loading()) {
+  <div class="state" role="status">
+    <span class="spinner"></span>
+    <p>Getting your financial picture…</p>
+  </div>
+} @else if (error()) {
+  <div class="state error" role="alert">
+    <wp-icon name="info" />
+    <p>{{ error() }}</p>
+    <button class="button secondary" (click)="retry.emit()">Try again</button>
+  </div>
+} @else {
+  <div class="state">
+    <div class="empty-icon"><wp-icon [name]="icon()" /></div>
+    <h3>{{ title() }}</h3>
+    <p>{{ description() }}</p>
+    <ng-content />
+  </div>
+}

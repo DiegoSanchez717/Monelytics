@@ -1,0 +1,224 @@
+<div class="page-heading">
+  <div>
+    <div class="eyebrow">{{ today | date: 'EEEE, MMMM d' }}</div>
+    <h1>
+      {{ greeting }}, <span>{{ auth.user()?.firstName }}.</span>
+    </h1>
+    <p>Here’s the latest picture of your future.</p>
+  </div>
+  <a class="button primary" routerLink="/transactions" [queryParams]="{ add: true }"
+    ><wp-icon name="plus" /> Add transaction</a
+  >
+</div>
+@if (loading() || error()) {
+  <wp-state [loading]="loading()" [error]="error()" (retry)="load()" />
+} @else if (data(); as d) {
+  <section class="card balance-card">
+    <div class="balance-top">
+      <div>
+        <div class="label">
+          Total retirement balance
+          <span class="info-dot" title="The total balance across all your IRA accounts.">i</span>
+        </div>
+        <div class="balance-amount">
+          {{ d.totalBalance | currency: 'USD' : 'symbol' : '1.2-2' }}
+        </div>
+        <div class="trend" [class.negative]="d.monthlyChange < 0">
+          <wp-icon name="up" /> {{ d.monthlyChange >= 0 ? '+' : ''
+          }}{{ d.monthlyChange | number: '1.1-1' }}% this month
+          <span class="muted">across your accounts</span>
+        </div>
+      </div>
+      <div class="balance-options">
+        <span class="pill neutral"><span class="tiny-dot"></span> All IRA accounts</span>
+        <div class="period-switch" aria-label="Chart period">
+          <span class="active">6 months</span>
+        </div>
+      </div>
+    </div>
+    @if (d.balanceHistory.length) {
+      <wp-chart
+        [values]="historyValues()"
+        [labels]="historyLabels()"
+        label="Total account balance over the last six months"
+      />
+    } @else {
+      <div class="inline-empty">Your balance history will take shape as you add activity.</div>
+    }
+    <div class="balance-foot">
+      <span><i class="legend-dot"></i> Your retirement savings</span
+      ><span><wp-icon name="shield" /> A clear view of your progress</span>
+    </div>
+  </section>
+  <section class="stats-grid" aria-label="Financial summary">
+    <article class="card stat-card">
+      <div class="stat-head">
+        <span class="label">Contributed this year</span
+        ><span class="circle-icon teal"><wp-icon name="arrows" /></span>
+      </div>
+      <strong>{{ d.annualContributions | currency: 'USD' : 'symbol' : '1.0-0' }}</strong
+      ><span class="stat-sub">Consistent steps. Meaningful progress.</span>
+    </article>
+    <article class="card stat-card">
+      <div class="stat-head">
+        <span class="label">IRA contribution tracker</span
+        ><span class="circle-icon coral"><wp-icon name="wallet" /></span>
+      </div>
+      <strong
+        >{{ remaining() | currency: 'USD' : 'symbol' : '1.0-0' }} <small>remaining</small></strong
+      >
+      <div class="progress-track">
+        <span [style.width.%]="contributionPercent()"></span>
+      </div>
+      <span class="stat-sub"
+        >{{ contributionPercent() | number: '1.0-0' }}% of your
+        {{ d.contributionLimit | currency: 'USD' : 'symbol' : '1.0-0' }}
+        planning limit</span
+      >
+    </article>
+    <article class="card stat-card">
+      <div class="stat-head">
+        <span class="label">Retirement goal progress</span
+        ><span class="circle-icon gold"><wp-icon name="target" /></span>
+      </div>
+      <strong>{{ d.goalProgress | number: '1.0-0' }}<small>% of the way</small></strong
+      ><span class="stat-sub">A future worth working toward.</span>
+    </article>
+  </section>
+  <div class="dashboard-grid">
+    <div class="dashboard-main">
+      <section class="card section-card">
+        <div class="card-heading">
+          <div>
+            <span class="eyebrow">YOUR FOUNDATION</span>
+            <h2>Your IRA accounts</h2>
+          </div>
+          <a routerLink="/accounts" class="text-link">View accounts <wp-icon name="arrow" /></a>
+        </div>
+        @if (d.accounts.length) {
+          <div class="ira-preview-grid">
+            @for (account of d.accounts; track account.id) {
+              <a routerLink="/accounts" class="ira-preview"
+                ><div class="ira-top">
+                  <span
+                    class="circle-icon"
+                    [class.coral]="account.type === 'TRADITIONAL_IRA'"
+                    [class.teal]="account.type === 'ROTH_IRA'"
+                    ><wp-icon name="wallet" /></span
+                  ><span class="pill neutral">{{
+                    account.type === 'ROTH_IRA' ? 'Roth IRA' : 'Traditional IRA'
+                  }}</span>
+                </div>
+                <h3>{{ account.name }}</h3>
+                <strong>{{ account.balance | currency }}</strong>
+                <div class="ira-foot">
+                  <span
+                    >{{
+                      account.annualContributions | currency: 'USD' : 'symbol' : '1.0-0'
+                    }}
+                    contributed this year</span
+                  ><wp-icon name="arrow" /></div
+              ></a>
+            }
+          </div>
+        } @else {
+          <wp-state
+            title="Make room for your future"
+            description="Add your first IRA to start building your financial picture."
+            icon="wallet"
+            ><a routerLink="/accounts" class="button secondary">Add an account</a></wp-state
+          >
+        }
+      </section>
+      <section class="card section-card activity-card">
+        <div class="card-heading">
+          <div>
+            <span class="eyebrow">THE LITTLE STEPS</span>
+            <h2>Recent activity</h2>
+          </div>
+          <a routerLink="/transactions" class="text-link">View all <wp-icon name="arrow" /></a>
+        </div>
+        @if (d.recentTransactions.length) {
+          <div class="activity-list">
+            @for (tx of d.recentTransactions.slice(0, 4); track tx.id) {
+              <div class="activity-row">
+                <span
+                  class="circle-icon"
+                  [class.coral]="tx.type === 'WITHDRAWAL'"
+                  [class.teal]="tx.type !== 'WITHDRAWAL'"
+                  ><wp-icon [name]="tx.type === 'WITHDRAWAL' ? 'arrows' : 'plus'"
+                /></span>
+                <div>
+                  <strong>{{ tx.description }}</strong
+                  ><span>{{ tx.accountName }} · {{ tx.date | date: 'MMM d, y' }}</span>
+                </div>
+                <div class="activity-amount" [class.negative]="tx.type === 'WITHDRAWAL'">
+                  <strong
+                    >{{ tx.type === 'WITHDRAWAL' ? '-' : '+' }}{{ tx.amount | currency }}</strong
+                  ><span>{{ transactionLabel(tx.type) }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <wp-state
+            title="Your story is just beginning"
+            description="Add a contribution to see your account activity here."
+            icon="arrows"
+          />
+        }
+      </section>
+    </div>
+    <aside class="dashboard-aside">
+      <section class="insight-card">
+        <div class="insight-top">
+          <span class="circle-icon"><wp-icon name="leaf" /></span
+          ><span class="eyebrow">A LITTLE PERSPECTIVE</span>
+        </div>
+        <h2>Your future self <br />will thank you.</h2>
+        <p>
+          Small, steady contributions can make a big difference over time. Explore what your next
+          step could look like.
+        </p>
+        <a routerLink="/goals" class="button dark full"
+          >Plan your retirement <wp-icon name="arrow" /></a
+        ><span class="insight-decoration" aria-hidden="true">↗</span>
+      </section>
+      <section class="card section-card">
+        <div class="card-heading">
+          <h2>Your next milestones</h2>
+          <wp-icon name="target" />
+        </div>
+        @if (goals().length) {
+          @for (goal of goals().slice(0, 2); track goal.id) {
+            <div class="goal-preview">
+              <div>
+                <strong>{{ goal.name }}</strong
+                ><span
+                  >{{ goal.currentAmount | currency: 'USD' : 'symbol' : '1.0-0' }}
+                  <span class="muted"
+                    >of {{ goal.targetAmount | currency: 'USD' : 'symbol' : '1.0-0' }}</span
+                  ></span
+                >
+              </div>
+              <div class="progress-track">
+                <span [style.width.%]="goalPercent(goal)"></span>
+              </div>
+              <span class="stat-sub">Target {{ goal.targetDate | date: 'MMMM y' }}</span>
+            </div>
+          }
+        } @else {
+          <p class="muted">Give your savings a destination. Create your first retirement goal.</p>
+        }
+        <a routerLink="/goals" class="text-link">Explore your goals <wp-icon name="arrow" /></a>
+      </section>
+      <div class="quiet-note">
+        <wp-icon name="shield" />
+        <p>
+          IRA limits vary by age, income, and tax year. This tracker is for planning; confirm your
+          eligibility before contributing.
+        </p>
+      </div>
+    </aside>
+  </div>
+}

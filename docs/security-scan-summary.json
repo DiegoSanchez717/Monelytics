@@ -1,0 +1,68 @@
+{
+  "tool": "Trivy",
+  "version": "0.75.0",
+  "policy": {
+    "scanners": [
+      "vuln"
+    ],
+    "severities": [
+      "HIGH",
+      "CRITICAL"
+    ],
+    "ignoreUnfixed": true
+  },
+  "scope": "Local production application images; not a penetration test or AWS deployment verification",
+  "scans": [
+    {
+      "createdAt": "2026-10-08T04:10:19.052028343Z",
+      "artifact": "wealthpath-frontend:latest",
+      "artifactType": "container_image",
+      "imageDigest": "sha256:058a7598dce00a08ff56a7b98d83ebffbba780b0b6e2c903cd5c6db1482add9b",
+      "detectedPackages": [
+        {
+          "type": "alpine",
+          "count": 70
+        }
+      ],
+      "fixableHighFindings": 0,
+      "fixableCriticalFindings": 0
+    },
+    {
+      "createdAt": "2026-10-08T04:12:09.121013638Z",
+      "artifact": "wealthpath-backend:latest",
+      "artifactType": "container_image",
+      "imageDigest": "sha256:3e3e30072ebf63d3a12f2a4908ade5f5e1b8267af1657d91b7d08617251dce88",
+      "detectedPackages": [
+        {
+          "type": "ubuntu",
+          "count": 143
+        },
+        {
+          "type": "jar",
+          "count": 105
+        }
+      ],
+      "fixableHighFindings": 0,
+      "fixableCriticalFindings": 0
+    },
+    {
+      "createdAt": "2026-10-08T04:12:39.388778214Z",
+      "artifact": "org.postgresql:postgresql:42.7.14",
+      "artifactType": "cyclonedx",
+      "imageDigest": null,
+      "detectedPackages": [
+        {
+          "type": "jar",
+          "count": 1
+        }
+      ],
+      "fixableHighFindings": 0,
+      "fixableCriticalFindings": 0
+    }
+  ],
+  "notes": [
+    "The newly released PostgreSQL JDBC JAR was verified in the packaged application and scanned separately through its explicit Maven coordinate because the JAR index did not identify it automatically.",
+    "The frontend npm audit is a separate check covering Angular dependencies bundled into JavaScript.",
+    "The expiring CDK deployment-tool exception is documented in SECURITY.md; no application runtime vulnerability exceptions were used."
+  ]
+}

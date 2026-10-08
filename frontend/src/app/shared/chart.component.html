@@ -1,0 +1,36 @@
+<div class="chart-wrap">
+  <svg viewBox="0 0 900 220" preserveAspectRatio="none" role="img" [attr.aria-label]="summary()">
+    <defs>
+      <linearGradient [attr.id]="gradientId" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#48D1CC" stop-opacity=".28" />
+        <stop offset="100%" stop-color="#48D1CC" stop-opacity=".015" />
+      </linearGradient>
+    </defs>
+    @for (y of [30, 90, 150, 210]; track y) {
+      <line x1="0" [attr.y1]="y" x2="900" [attr.y2]="y" stroke="#dae5e7" stroke-dasharray="4 7" />
+    }
+    @if (points().length) {
+      <path [attr.d]="area()" [attr.fill]="'url(#' + gradientId + ')'" />
+      <path
+        [attr.d]="line()"
+        stroke="#147d79"
+        stroke-width="3.5"
+        fill="none"
+        vector-effect="non-scaling-stroke"
+      />
+      <circle
+        [attr.cx]="points()[points().length - 1].x"
+        [attr.cy]="points()[points().length - 1].y"
+        r="5.5"
+        fill="#48D1CC"
+        stroke="white"
+        stroke-width="3"
+      />
+    }
+  </svg>
+  <div class="chart-labels">
+    @for (item of labels(); track $index) {
+      <span>{{ item }}</span>
+    }
+  </div>
+</div>

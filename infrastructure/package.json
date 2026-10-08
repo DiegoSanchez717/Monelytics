@@ -1,0 +1,24 @@
+{
+  "name": "wealthpath-infrastructure",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tested AWS CDK infrastructure for WealthPath",
+  "scripts": {
+    "build": "tsc",
+    "test": "npm run build && node --test dist/test/*.test.js",
+    "synth": "npm run build && cdk synth",
+    "diff": "npm run build && cdk diff",
+    "audit": "node scripts/audit-dependencies.mjs",
+    "deploy": "npm run build && cdk deploy"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "2.272.0",
+    "constructs": "10.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.1",
+    "aws-cdk": "2.1145.0",
+    "typescript": "5.9.3"
+  },
+  "engines": { "node": ">=24.12.0 <25" }
+}

@@ -1,0 +1,143 @@
+<section class="auth-layout">
+  <div class="auth-story">
+    <span class="eyebrow">A FUTURE THAT FEELS LIKE YOU</span>
+    <h1>Good things<br />take a <span>little planning.</span></h1>
+    <p>
+      Bring your retirement into focus. One account, one contribution, one meaningful step at a
+      time.
+    </p>
+    <div class="auth-quote">
+      <span class="circle-icon teal"><wp-icon name="leaf" /></span>
+      <div>
+        <strong>Start where you are.</strong>
+        <p>Build toward where you want to be.</p>
+      </div>
+    </div>
+    <div class="auth-trust">
+      <wp-icon name="shield" /> Secure sessions. Optional two-step verification.
+    </div>
+  </div>
+  <div class="card auth-card">
+    <div class="auth-card-icon">
+      <wp-icon [name]="register ? 'leaf' : 'wallet'" />
+    </div>
+    <h2>{{ register ? 'Find your path.' : 'Welcome back.' }}</h2>
+    <p>
+      {{
+        register
+          ? 'A clear financial future starts with a simple step.'
+          : 'Your next chapter is right where you left it.'
+      }}
+    </p>
+    @if (error()) {
+      <div class="alert error" role="alert">{{ error() }}</div>
+    }
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      @if (register) {
+        <div class="form-row">
+          <label
+            >First name<input
+              formControlName="firstName"
+              autocomplete="given-name"
+              placeholder="Alex"
+              maxlength="60"
+            /><span class="field-error" [hidden]="!invalid('firstName')"
+              >Enter your first name.</span
+            ></label
+          ><label
+            >Last name<input
+              formControlName="lastName"
+              autocomplete="family-name"
+              placeholder="Morgan"
+              maxlength="60"
+            /><span class="field-error" [hidden]="!invalid('lastName')"
+              >Enter your last name.</span
+            ></label
+          >
+        </div>
+      }
+      <label
+        >Email address<input
+          type="email"
+          formControlName="email"
+          autocomplete="email"
+          placeholder="you@example.com"
+          maxlength="254"
+        /><span class="field-error" [hidden]="!invalid('email')"
+          >Enter a valid email address.</span
+        ></label
+      ><label
+        >Password
+        <div class="password-field">
+          <input
+            [type]="showPassword() ? 'text' : 'password'"
+            formControlName="password"
+            [autocomplete]="register ? 'new-password' : 'current-password'"
+            placeholder="Enter your password"
+            maxlength="72"
+          /><button
+            type="button"
+            (click)="showPassword.set(!showPassword())"
+            [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+          >
+            {{ showPassword() ? 'Hide' : 'Show' }}
+          </button>
+        </div>
+        @if (register) {
+          <span class="field-help"
+            >12+ characters, with uppercase, lowercase, a number, and a symbol.</span
+          >
+        }
+        <span class="field-error" [hidden]="!invalid('password')">{{
+          register
+            ? 'Use 12+ characters with uppercase, lowercase, a number, and a symbol.'
+            : 'Enter your password.'
+        }}</span></label
+      >
+      @if (mfaRequired()) {
+        <label
+          >Authenticator code<input
+            formControlName="code"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            placeholder="6-digit code"
+            maxlength="6"
+          /><span class="field-help">Enter the current code from your authenticator app.</span
+          ><span class="field-error" [hidden]="!invalid('code')">Enter a 6-digit code.</span></label
+        >
+      }
+      @if (register) {
+        <label class="checkbox-label"
+          ><input type="checkbox" formControlName="consent" /><span
+            >I understand WealthPath is a planning application and does not hold or transfer
+            money.</span
+          ></label
+        ><span class="field-error" [hidden]="!invalid('consent')"
+          >Please acknowledge before continuing.</span
+        >
+      }
+      <button type="submit" class="button primary full" [disabled]="busy()">
+        @if (busy()) {
+          <span class="spinner small"></span>
+        }
+        {{ busy() ? 'Please wait…' : register ? 'Create your account' : 'Sign in to WealthPath'
+        }}<wp-icon name="arrow" />
+      </button>
+    </form>
+    <p class="auth-switch">
+      {{ register ? 'Already on your path?' : 'New here?' }}
+      <a [routerLink]="register ? '/login' : '/register'">{{
+        register ? 'Sign in' : 'Create an account'
+      }}</a>
+    </p>
+    @if (!register) {
+      <div class="demo-note">
+        <span class="eyebrow">TAKE A LOOK AROUND</span>
+        <p>Use the demo account to explore.</p>
+        <button type="button" class="text-button" (click)="fillDemo()">
+          Fill demo credentials <wp-icon name="arrow" /></button
+        ><span>demo&#64;wealthpath.dev · DemoPath!2026</span>
+      </div>
+    }
+  </div>
+</section>

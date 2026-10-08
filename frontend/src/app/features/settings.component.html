@@ -1,0 +1,175 @@
+<div class="page-heading">
+  <div>
+    <span class="eyebrow">MAKE YOURSELF AT HOME</span>
+    <h1>Your <span>settings.</span></h1>
+    <p>A few thoughtful details. A little more peace of mind.</p>
+  </div>
+</div>
+@if (success()) {
+  <div class="alert success" role="status"><wp-icon name="check" />{{ success() }}</div>
+}
+@if (error()) {
+  <div class="alert error" role="alert">{{ error() }}</div>
+}
+<div class="settings-layout">
+  <section class="card section-card">
+    <div class="card-heading">
+      <div>
+        <span class="eyebrow">THE PERSONAL PART</span>
+        <h2>Your profile</h2>
+      </div>
+      <span class="circle-icon teal"><wp-icon name="person" /></span>
+    </div>
+    <div class="profile-intro">
+      <span class="large-avatar"
+        >{{ auth.user()?.firstName?.charAt(0) }}{{ auth.user()?.lastName?.charAt(0) }}</span
+      >
+      <div>
+        <h3>{{ auth.user()?.firstName }} {{ auth.user()?.lastName }}</h3>
+        <span class="muted">{{
+          auth.user()?.role === 'ADMIN' ? 'Administrator' : 'Your retirement, your path'
+        }}</span>
+      </div>
+    </div>
+    <form [formGroup]="profile" (ngSubmit)="saveProfile()" novalidate>
+      <div class="form-row">
+        <label
+          >First name<input
+            formControlName="firstName"
+            autocomplete="given-name"
+            maxlength="80" /></label
+        ><label
+          >Last name<input formControlName="lastName" autocomplete="family-name" maxlength="80"
+        /></label>
+      </div>
+      @if (profile.invalid && profile.touched) {
+        <span class="field-error">Enter your first and last name.</span>
+      }
+      <label
+        >Email address<input [value]="auth.user()?.email" type="email" disabled /><span
+          class="field-help"
+          >Your email is your account’s sign-in identity.</span
+        ></label
+      ><button class="button primary" [disabled]="busy()">
+        {{ busy() ? 'Saving…' : 'Save profile' }}<wp-icon name="check" />
+      </button>
+    </form>
+  </section>
+  <section class="card section-card">
+    <div class="card-heading">
+      <div>
+        <span class="eyebrow">A LITTLE EXTRA ASSURANCE</span>
+        <h2>Account security</h2>
+      </div>
+      <span class="circle-icon coral"><wp-icon name="shield" /></span>
+    </div>
+    <div class="security-status">
+      <div>
+        <h3>Two-step verification</h3>
+        <p>Add an authenticator code to your password for an extra layer of protection.</p>
+      </div>
+      <span
+        class="pill"
+        [class.teal]="auth.user()?.mfaEnabled"
+        [class.neutral]="!auth.user()?.mfaEnabled"
+        >{{ auth.user()?.mfaEnabled ? 'Enabled' : 'Not enabled' }}</span
+      >
+    </div>
+    @if (!showMfa()) {
+      <button class="button secondary" (click)="showMfa.set(true)">
+        <wp-icon name="lock" />{{
+          auth.user()?.mfaEnabled ? 'Manage verification' : 'Set up verification'
+        }}
+      </button>
+    } @else {
+      <form [formGroup]="mfa" (ngSubmit)="submitMfa()" class="mfa-form" novalidate>
+        <label
+          >Current password<input
+            formControlName="password"
+            type="password"
+            autocomplete="current-password"
+            maxlength="72"
+          /><span
+            class="field-error"
+            [hidden]="!mfa.controls.password.invalid || !mfa.controls.password.touched"
+            >Enter your current password.</span
+          ></label
+        >
+        @if (setup(); as s) {
+          <div class="mfa-setup">
+            <strong>1. Add WealthPath to your authenticator</strong>
+            <p>
+              Choose “Enter a setup key” in your authenticator app, select time-based codes, and
+              enter this key.
+            </p>
+            <div class="label">
+              Authenticator setup key<code class="mfa-secret">{{ s.secret }}</code>
+            </div>
+            <button type="button" class="text-button" (click)="copySecret()">
+              {{ copied() ? 'Copied!' : 'Copy setup key' }}
+            </button>
+            <p class="field-help">
+              Keep this key private. It grants access to your account’s second factor.
+            </p>
+          </div>
+        }
+        @if (auth.user()?.mfaEnabled || setup()) {
+          <label
+            >Authenticator code<input
+              formControlName="code"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              maxlength="6"
+              placeholder="6-digit code"
+            /><span class="field-help"
+              >Enter the current code to
+              {{ auth.user()?.mfaEnabled ? 'disable' : 'enable' }}
+              verification.</span
+            ><span
+              class="field-error"
+              [hidden]="!mfa.controls.code.invalid || !mfa.controls.code.touched"
+              >Enter a 6-digit code.</span
+            ></label
+          >
+        }
+        <div class="dialog-actions">
+          <button type="button" class="button secondary" (click)="cancelMfa()">Cancel</button
+          ><button
+            class="button"
+            [class.primary]="!auth.user()?.mfaEnabled"
+            [class.danger-button]="auth.user()?.mfaEnabled"
+            [disabled]="mfaBusy()"
+          >
+            {{
+              mfaBusy()
+                ? 'Please wait…'
+                : auth.user()?.mfaEnabled
+                  ? 'Disable verification'
+                  : setup()
+                    ? 'Enable verification'
+                    : 'Get setup key'
+            }}
+          </button>
+        </div>
+      </form>
+    }
+    <div class="security-detail">
+      <wp-icon name="shield" />
+      <div>
+        <strong>Protected, every step of the way.</strong>
+        <p>
+          Your session stays in a secure, HttpOnly cookie. Important account actions are recorded in
+          the audit log.
+        </p>
+      </div>
+    </div>
+  </section>
+</div>
+<div class="quiet-note">
+  <wp-icon name="info" />
+  <p>
+    If you enable two-step verification, keep your authenticator and setup key accessible.
+    WealthPath does not offer email recovery for a lost second factor; administrators cannot view
+    your secret.
+  </p>
+</div>

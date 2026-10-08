@@ -1,0 +1,5 @@
+# Explicit development override; normal Compose does not expose PostgreSQL.
+services:
+  database:
+    ports:
+      - '127.0.0.1:${DATABASE_PORT:-5432}:5432'

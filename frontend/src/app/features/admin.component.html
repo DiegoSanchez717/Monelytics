@@ -1,0 +1,80 @@
+<div class="page-heading">
+  <div>
+    <span class="eyebrow">ACCOUNTABILITY, IN VIEW</span>
+    <h1>The <span>audit log.</span></h1>
+    <p>A clear record of important account and security actions.</p>
+  </div>
+  <span class="pill teal"><wp-icon name="shield" /> Administrator access</span>
+</div>
+<section class="card section-card">
+  <div class="card-heading">
+    <h2>Account activity trail</h2>
+    <button class="button secondary small" (click)="load()">Refresh</button>
+  </div>
+  <p class="muted">
+    Read-only records of successful security and financial changes. Actor and resource identifiers
+    support traceability without revealing private account data.
+  </p>
+  @if (loading() || error()) {
+    <wp-state [loading]="loading()" [error]="error()" (retry)="load()" />
+  } @else if (data(); as d) {
+    @if (d.content.length) {
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Action</th>
+              <th scope="col">Actor</th>
+              <th scope="col">Resource</th>
+              <th scope="col">Details</th>
+              <th scope="col">Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (entry of d.content; track entry.id) {
+              <tr>
+                <td>
+                  <span class="pill neutral">{{ entry.action.replaceAll('_', ' ') }}</span>
+                </td>
+                <td class="audit-id">
+                  <code [title]="entry.actorId">{{
+                    entry.actorId ? entry.actorId.slice(0, 8) + '…' : 'System'
+                  }}</code>
+                </td>
+                <td class="audit-id">
+                  <code [title]="entry.resourceId">{{
+                    entry.resourceId ? entry.resourceId.slice(0, 8) + '…' : '—'
+                  }}</code>
+                </td>
+                <td>{{ entry.detail }}</td>
+                <td class="nowrap">
+                  {{ entry.occurredAt | date: 'MMM d, y, h:mm a' }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <span>{{ d.totalElements }} records · Page {{ d.number + 1 }} of {{ d.totalPages }}</span>
+        <div>
+          <button class="button secondary small" [disabled]="page() === 0" (click)="changePage(-1)">
+            Previous</button
+          ><button
+            class="button secondary small"
+            [disabled]="page() + 1 >= d.totalPages"
+            (click)="changePage(1)"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    } @else {
+      <wp-state
+        title="A clean slate"
+        description="Important account actions will appear here as they happen."
+        icon="shield"
+      />
+    }
+  }
+</section>

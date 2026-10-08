@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:wealthpath;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password: ""
+  session:
+    jdbc:
+      platform: h2
+wealthpath:
+  demo-enabled: false
+  mfa-encryption-key: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+logging:
+  level:
+    root: WARN

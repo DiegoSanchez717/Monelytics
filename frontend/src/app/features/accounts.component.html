@@ -1,0 +1,218 @@
+<div class="page-heading">
+  <div>
+    <span class="eyebrow">A STRONG FOUNDATION</span>
+    <h1>Your IRA <span>accounts.</span></h1>
+    <p>A clear view of the savings behind your next chapter.</p>
+  </div>
+  <button class="button primary" (click)="open()"><wp-icon name="plus" /> Add IRA account</button>
+</div>
+@if (success()) {
+  <div class="alert success" role="status"><wp-icon name="check" />{{ success() }}</div>
+}
+@if (loading() || error()) {
+  <wp-state [loading]="loading()" [error]="error()" (retry)="load()" />
+} @else {
+  <div class="account-summary card">
+    <div>
+      <span class="label">Your retirement foundation</span><strong>{{ total() | currency }}</strong>
+    </div>
+    <span class="pill teal"
+      >{{ accounts().length }} {{ accounts().length === 1 ? 'account' : 'accounts' }}</span
+    >
+    <p>Every account is a step toward the life you want.</p>
+  </div>
+  <section class="accounts-grid">
+    @for (account of accounts(); track account.id) {
+      <article class="card account-card">
+        <div class="account-card-top">
+          <span
+            class="circle-icon"
+            [class.teal]="account.type === 'ROTH_IRA'"
+            [class.coral]="account.type === 'TRADITIONAL_IRA'"
+            ><wp-icon name="wallet" /></span
+          ><span class="pill neutral">{{
+            account.type === 'ROTH_IRA' ? 'Roth IRA' : 'Traditional IRA'
+          }}</span>
+        </div>
+        <h2>{{ account.name }}</h2>
+        <div class="account-balance">{{ account.balance | currency }}</div>
+        <div class="account-detail">
+          <span>Contributions this year</span
+          ><strong>{{ account.annualContributions | currency }}</strong>
+        </div>
+        <div class="beneficiary-section">
+          <div class="beneficiary-heading">
+            <h3>Beneficiaries</h3>
+            <button class="text-button" (click)="openBeneficiaries(account)">
+              Manage <wp-icon name="edit" />
+            </button>
+          </div>
+          @if (account.beneficiaries.length) {
+            @for (person of account.beneficiaries; track $index) {
+              <div class="beneficiary-row">
+                <span class="small-avatar">{{ person.name.charAt(0) }}</span>
+                <div>
+                  <strong>{{ person.name }}</strong
+                  ><span>{{ person.relationship }}</span>
+                </div>
+                <span class="pill neutral">{{ person.percentage | number: '1.0-2' }}%</span>
+              </div>
+            }
+          } @else {
+            <p class="muted">Add someone to your plan. No beneficiaries assigned yet.</p>
+          }
+        </div>
+        <div class="account-actions">
+          <button class="button secondary small" (click)="open(account)">
+            <wp-icon name="edit" /> Edit account</button
+          ><button
+            class="icon-button danger"
+            (click)="deleting.set(account)"
+            [attr.aria-label]="'Delete ' + account.name"
+          >
+            <wp-icon name="trash" />
+          </button>
+        </div>
+      </article>
+    } @empty {
+      <div class="card full-span">
+        <wp-state
+          title="Your future starts here"
+          description="Add your first Roth or Traditional IRA to begin tracking retirement savings."
+          icon="wallet"
+          ><button class="button primary" (click)="open()">Add your first account</button></wp-state
+        >
+      </div>
+    }
+  </section>
+  <div class="quiet-note">
+    <wp-icon name="info" />
+    <p>
+      WealthPath records your IRA balances and activity. Opening an account here does not create a
+      financial account at a bank or brokerage.
+    </p>
+  </div>
+}
+@if (editing()) {
+  <wp-dialog
+    [title]="selected() ? 'Edit IRA account' : 'Add an IRA account'"
+    (closed)="editing.set(false)"
+  >
+    @if (formError()) {
+      <div class="alert error" role="alert">{{ formError() }}</div>
+    }
+    <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <label
+        >Account name<input formControlName="name" placeholder="My Roth IRA" maxlength="80" /><span
+          class="field-error"
+          [hidden]="!invalid('name')"
+          >Enter a name with up to 80 characters.</span
+        ></label
+      ><label
+        >Account type<select formControlName="type">
+          <option value="ROTH_IRA">Roth IRA</option>
+          <option value="TRADITIONAL_IRA">Traditional IRA</option>
+        </select></label
+      >
+      @if (!selected()) {
+        <label
+          >Opening balance ($)<input
+            type="number"
+            formControlName="openingBalance"
+            min="0"
+            max="100000000"
+            step=".01"
+          /><span class="field-help">The current balance from your bank or brokerage.</span
+          ><span class="field-error" [hidden]="!invalid('openingBalance')"
+            >Enter a balance between $0 and $100,000,000.</span
+          ></label
+        >
+      }
+      <div class="dialog-actions">
+        <button type="button" class="button secondary" (click)="editing.set(false)">Cancel</button
+        ><button class="button primary" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : 'Save account' }}
+        </button>
+      </div>
+    </form></wp-dialog
+  >
+}
+@if (beneficiaryAccount(); as account) {
+  <wp-dialog title="Plan for your people" (closed)="beneficiaryAccount.set(null)"
+    ><p class="muted">
+      Assign beneficiaries for {{ account.name }}. Allocations must total 100%. Remove all entries
+      to clear assignments.
+    </p>
+    @if (formError()) {
+      <div class="alert error" role="alert">{{ formError() }}</div>
+    }
+    <form [formGroup]="beneficiaryForm" (ngSubmit)="saveBeneficiaries()" novalidate>
+      <div formArrayName="beneficiaries">
+        @for (control of beneficiaryControls.controls; track control; let i = $index) {
+          <div class="beneficiary-form-row" [formGroupName]="i">
+            <div class="form-row">
+              <label
+                >Name<input formControlName="name" placeholder="Full name" maxlength="100" /></label
+              ><label
+                >Relationship<input
+                  formControlName="relationship"
+                  placeholder="Spouse, child…"
+                  maxlength="40"
+              /></label>
+            </div>
+            <div class="form-row allocation-row">
+              <label
+                >Allocation (%)<input
+                  type="number"
+                  formControlName="percentage"
+                  min=".01"
+                  max="100"
+                  step=".01" /></label
+              ><button
+                type="button"
+                class="icon-button danger"
+                [attr.aria-label]="'Remove beneficiary ' + (i + 1)"
+                (click)="beneficiaryControls.removeAt(i)"
+              >
+                <wp-icon name="trash" />
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+      <div
+        class="allocation-total"
+        [class.invalid]="beneficiaryControls.length > 0 && allocationTotal() !== 100"
+      >
+        <span>Total allocation</span><strong>{{ allocationTotal() | number: '1.0-2' }}%</strong>
+      </div>
+      <button type="button" class="text-button" (click)="addBeneficiary()">
+        <wp-icon name="plus" /> Add beneficiary
+      </button>
+      <div class="dialog-actions">
+        <button type="button" class="button secondary" (click)="beneficiaryAccount.set(null)">
+          Cancel</button
+        ><button class="button primary" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : 'Save beneficiaries' }}
+        </button>
+      </div>
+    </form></wp-dialog
+  >
+}
+@if (deleting(); as account) {
+  <wp-dialog title="Remove this account?" (closed)="deleting.set(null)"
+    ><p>
+      This removes <strong>{{ account.name }}</strong> and its beneficiaries. Accounts with recorded
+      transactions cannot be removed; remove their activity first. This action cannot be undone.
+    </p>
+    @if (formError()) {
+      <div class="alert error" role="alert">{{ formError() }}</div>
+    }
+    <div class="dialog-actions">
+      <button class="button secondary" (click)="deleting.set(null)">Keep account</button
+      ><button class="button danger-button" [disabled]="saving()" (click)="remove()">
+        {{ saving() ? 'Removing…' : 'Remove account' }}
+      </button>
+    </div></wp-dialog
+  >
+}
