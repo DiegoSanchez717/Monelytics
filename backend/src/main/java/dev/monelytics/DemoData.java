@@ -1,4 +1,4 @@
-package dev.wealthpath;
+package dev.monelytics;
 
 import java.math.BigDecimal;
 import java.time.*;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
-@ConditionalOnProperty(name = "wealthpath.demo-enabled", havingValue = "true")
+@ConditionalOnProperty(name = "monelytics.demo-enabled", havingValue = "true")
 class DemoData implements CommandLineRunner {
   private final UserRepository users;
   private final AccountRepository accounts;
@@ -27,8 +27,8 @@ class DemoData implements CommandLineRunner {
       GoalRepository goals,
       PasswordEncoder passwords,
       AuditService audit,
-      @Value("${wealthpath.demo-password}") String demoPassword,
-      @Value("${wealthpath.admin-password}") String adminPassword) {
+      @Value("${monelytics.demo-password}") String demoPassword,
+      @Value("${monelytics.admin-password}") String adminPassword) {
     this.users = users;
     this.accounts = accounts;
     this.transactions = transactions;
@@ -44,10 +44,10 @@ class DemoData implements CommandLineRunner {
   public void run(String... args) {
     // Explicit opt-in makes repeatable demo data safe for local development; production disables
     // this runner.
-    if (!users.existsByEmail("admin@wealthpath.dev"))
-      createUser("Morgan", "Reed", "admin@wealthpath.dev", adminPassword, Role.ADMIN);
-    if (users.existsByEmail("demo@wealthpath.dev")) return;
-    AppUser user = createUser("Alex", "Morgan", "demo@wealthpath.dev", demoPassword, Role.USER);
+    if (!users.existsByEmail("admin@monelytics.dev"))
+      createUser("Morgan", "Reed", "admin@monelytics.dev", adminPassword, Role.ADMIN);
+    if (users.existsByEmail("demo@monelytics.dev")) return;
+    AppUser user = createUser("Alex", "Morgan", "demo@monelytics.dev", demoPassword, Role.USER);
     IraAccount roth = account(user, "Everyday Roth IRA", AccountType.ROTH_IRA, "8500.00");
     IraAccount traditional =
         account(user, "Future Traditional IRA", AccountType.TRADITIONAL_IRA, "5200.00");

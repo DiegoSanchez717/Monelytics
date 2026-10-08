@@ -1,4 +1,4 @@
-/* WealthPath's palette keeps the requested teal and coral while using deeper
+/* Monelytics's palette keeps the requested teal and coral while using deeper
    tones for text and interactive states that need accessible contrast. */
 :root {
   --teal: #48d1cc;
@@ -97,7 +97,7 @@ p {
 svg {
   display: block;
 }
-wp-root {
+ml-root {
   display: block;
 }
 .app-frame {
@@ -349,7 +349,7 @@ main:focus {
   padding: 9px 13px;
   font-size: 12px;
 }
-.button.small wp-icon {
+.button.small ml-icon {
   width: 17px;
   height: 17px;
 }
@@ -374,8 +374,8 @@ main:focus {
 .text-button:hover {
   color: var(--ink);
 }
-.text-link wp-icon,
-.text-button wp-icon {
+.text-link ml-icon,
+.text-button ml-icon {
   width: 16px;
   height: 16px;
 }
@@ -446,7 +446,7 @@ main:focus {
   background: #faf4e8;
   color: #7b5b2d;
 }
-.pill wp-icon {
+.pill ml-icon {
   height: 16px;
   width: 16px;
 }
@@ -459,7 +459,7 @@ main:focus {
   border-radius: 12px;
   flex-shrink: 0;
 }
-.circle-icon wp-icon {
+.circle-icon ml-icon {
   width: 21px;
   height: 21px;
 }
@@ -554,7 +554,7 @@ main:focus {
   font-size: 12px;
   font-weight: 600;
 }
-.trend wp-icon {
+.trend ml-icon {
   height: 16px;
   width: 16px;
 }
@@ -613,7 +613,7 @@ main:focus {
   align-items: center;
   gap: 7px;
 }
-.balance-foot wp-icon {
+.balance-foot ml-icon {
   width: 13px;
   height: 13px;
 }
@@ -645,7 +645,7 @@ main:focus {
   height: 31px;
   border-radius: 9px;
 }
-.stat-head .circle-icon wp-icon {
+.stat-head .circle-icon ml-icon {
   width: 17px;
   height: 17px;
 }
@@ -720,7 +720,7 @@ main:focus {
   height: 33px;
   border-radius: 9px;
 }
-.ira-top .circle-icon wp-icon {
+.ira-top .circle-icon ml-icon {
   width: 19px;
   height: 19px;
 }
@@ -744,7 +744,7 @@ main:focus {
   font-size: 9px;
   gap: 8px;
 }
-.ira-foot wp-icon {
+.ira-foot ml-icon {
   height: 15px;
   width: 15px;
 }
@@ -767,7 +767,7 @@ main:focus {
   height: 33px;
   border-radius: 10px;
 }
-.activity-row > .circle-icon wp-icon {
+.activity-row > .circle-icon ml-icon {
   width: 16px;
   height: 16px;
 }
@@ -861,7 +861,7 @@ main:focus {
   font-size: 16px;
   letter-spacing: -0.25px;
 }
-.dashboard-aside .card-heading > wp-icon {
+.dashboard-aside .card-heading > ml-icon {
   color: var(--muted);
   width: 17px;
   height: 17px;
@@ -895,7 +895,7 @@ main:focus {
   padding: 0 4px;
   margin-top: 20px;
 }
-.quiet-note wp-icon {
+.quiet-note ml-icon {
   height: 16px;
   width: 16px;
   margin-top: 3px;
@@ -1030,7 +1030,7 @@ select {
   padding: 12px;
   margin: 10px 0;
 }
-.form-note wp-icon {
+.form-note ml-icon {
   width: 15px;
   height: 15px;
   color: var(--teal-dark);
@@ -1084,7 +1084,7 @@ select {
 .state.error p {
   color: #a25145;
 }
-.state.error > wp-icon {
+.state.error > ml-icon {
   color: #a25145;
 }
 .empty-icon {
@@ -1096,7 +1096,7 @@ select {
   display: grid;
   place-items: center;
 }
-.empty-icon wp-icon {
+.empty-icon ml-icon {
   width: 27px;
   height: 27px;
 }
@@ -1271,7 +1271,7 @@ select {
   flex: 1 1 230px;
   position: relative;
 }
-.search-field wp-icon {
+.search-field ml-icon {
   position: absolute;
   top: 12px;
   left: 12px;
@@ -1379,7 +1379,7 @@ tr:last-child td {
   height: 32px;
   border-radius: 9px;
 }
-.table-description wp-icon {
+.table-description ml-icon {
   width: 16px;
   height: 16px;
 }
@@ -1401,7 +1401,7 @@ tr:last-child td {
   width: 28px;
   height: 28px;
 }
-.row-actions wp-icon {
+.row-actions ml-icon {
   height: 14px;
   width: 14px;
 }
@@ -1493,7 +1493,7 @@ tr:last-child td {
   margin-top: 21px;
   color: #286857;
 }
-.projection-insight wp-icon {
+.projection-insight ml-icon {
   height: 20px;
   width: 20px;
 }
@@ -1593,7 +1593,7 @@ tr:last-child td {
   padding-top: 24px;
   margin-top: 26px;
 }
-.security-detail > wp-icon {
+.security-detail > ml-icon {
   width: 20px;
   height: 20px;
   color: var(--muted);
@@ -1685,7 +1685,7 @@ tr:last-child td {
   font-size: 10px;
   margin-top: 22px;
 }
-.hero-trust wp-icon {
+.hero-trust ml-icon {
   width: 15px;
   height: 15px;
 }
@@ -1807,7 +1807,7 @@ tr:last-child td {
   height: 30px;
   border-radius: 9px;
 }
-.preview-bottom wp-icon {
+.preview-bottom ml-icon {
   width: 18px;
   height: 18px;
 }
@@ -1843,7 +1843,7 @@ tr:last-child td {
   height: 31px;
   width: 31px;
 }
-.floating-note wp-icon {
+.floating-note ml-icon {
   width: 18px;
   height: 18px;
 }
@@ -1915,7 +1915,7 @@ tr:last-child td {
   flex-shrink: 0;
   box-shadow: 0 4px 15px #1c75620a;
 }
-.security-emblem wp-icon {
+.security-emblem ml-icon {
   width: 32px;
   height: 32px;
 }
@@ -1981,7 +1981,7 @@ tr:last-child td {
   color: var(--muted);
   margin-top: 36px;
 }
-.auth-trust wp-icon {
+.auth-trust ml-icon {
   width: 15px;
   height: 15px;
 }
@@ -2054,7 +2054,7 @@ tr:last-child td {
   .topbar {
     margin-bottom: 50px;
   }
-  .balance-card wp-chart .chart-wrap svg {
+  .balance-card ml-chart .chart-wrap svg {
     height: 215px;
   }
   .page-heading h1 {
@@ -2849,7 +2849,7 @@ tr:last-child td {
     padding: 9px 11px;
     gap: 7px;
   }
-  .public-nav > .button wp-icon {
+  .public-nav > .button ml-icon {
     height: 14px;
     width: 14px;
   }
@@ -2983,7 +2983,7 @@ tr:last-child td {
     height: 44px;
     width: 44px;
   }
-  .security-emblem wp-icon {
+  .security-emblem ml-icon {
     height: 25px;
     width: 25px;
   }

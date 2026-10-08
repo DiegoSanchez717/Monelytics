@@ -7,7 +7,7 @@ import { errorMessage } from '../core/api.service';
 import { IconComponent } from '../shared/icon.component';
 import { passwordByteLimit } from '../core/validators';
 @Component({
-  selector: 'wp-auth',
+  selector: 'ml-auth',
   imports: [ReactiveFormsModule, RouterLink, IconComponent],
   templateUrl: './auth.component.html',
 })
@@ -44,7 +44,7 @@ export class AuthComponent {
   }
   fillDemo(): void {
     this.form.patchValue({
-      email: 'demo@wealthpath.dev',
+      email: 'demo@monelytics.dev',
       password: 'DemoPath!2026',
     });
   }

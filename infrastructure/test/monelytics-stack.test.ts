@@ -2,9 +2,9 @@ import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
 import { App } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
-import { WealthPathStack } from '../lib/wealthpath-stack';
+import { MonelyticsStack } from '../lib/monelytics-stack';
 
-const template = () => Template.fromStack(new WealthPathStack(new App(), 'TestStack', {
+const template = () => Template.fromStack(new MonelyticsStack(new App(), 'TestStack', {
   env: { account: '123456789012', region: 'us-east-1' },
 }));
 
@@ -82,19 +82,19 @@ test('static assets cache independently while default HTML remains uncached', ()
 });
 
 test('custom viewer domain requires the correct certificate region', () => {
-  assert.throws(() => new WealthPathStack(new App({ context: { webDomain: 'wealth.example.com' } }), 'Invalid'), /supplied together/);
-  assert.throws(() => new WealthPathStack(new App({ context: {
-    webDomain: 'wealth.example.com', webCertificateArn: 'arn:aws:acm:us-west-2:123456789012:certificate/test',
+  assert.throws(() => new MonelyticsStack(new App({ context: { webDomain: 'monelytics.example.com' } }), 'Invalid'), /supplied together/);
+  assert.throws(() => new MonelyticsStack(new App({ context: {
+    webDomain: 'monelytics.example.com', webCertificateArn: 'arn:aws:acm:us-west-2:123456789012:certificate/test',
   } }), 'InvalidRegion'), /us-east-1/);
 });
 
 test('custom DNS aliases preserve the complete origin name parameter and frontend certificate', () => {
   const viewerCertificate = 'arn:aws:acm:us-east-1:123456789012:certificate/00000000-0000-0000-0000-000000000001';
   const app = new App({ context: {
-    webDomain: 'wealth.example.com', webCertificateArn: viewerCertificate,
+    webDomain: 'monelytics.example.com', webCertificateArn: viewerCertificate,
     hostedZoneId: 'Z1234567890', hostedZoneName: 'example.com',
   } });
-  const result = Template.fromStack(new WealthPathStack(app, 'CustomDomain', {
+  const result = Template.fromStack(new MonelyticsStack(app, 'CustomDomain', {
     env: { account: '123456789012', region: 'us-east-1' },
   }));
   result.resourceCountIs('AWS::Route53::RecordSet', 2);
@@ -103,7 +103,7 @@ test('custom DNS aliases preserve the complete origin name parameter and fronten
   });
   result.hasResourceProperties('AWS::CloudFront::Distribution', {
     DistributionConfig: Match.objectLike({
-      Aliases: ['wealth.example.com'],
+      Aliases: ['monelytics.example.com'],
       ViewerCertificate: Match.objectLike({ AcmCertificateArn: viewerCertificate }),
     }),
   });

@@ -4,10 +4,10 @@
     <h1>Dream it. <span>Plan it.</span></h1>
     <p>Turn your retirement vision into a path you can follow.</p>
   </div>
-  <button class="button primary" (click)="open()"><wp-icon name="plus" /> Create a goal</button>
+  <button class="button primary" (click)="open()"><ml-icon name="plus" /> Create a goal</button>
 </div>
 @if (success()) {
-  <div class="alert success" role="status"><wp-icon name="check" />{{ success() }}</div>
+  <div class="alert success" role="status"><ml-icon name="check" />{{ success() }}</div>
 }
 <section class="card calculator-card">
   <div class="card-heading">
@@ -16,7 +16,7 @@
       <h2>Your retirement calculator</h2>
       <p class="muted">Explore the power of consistent contributions.</p>
     </div>
-    <span class="circle-icon teal"><wp-icon name="target" /></span>
+    <span class="circle-icon teal"><ml-icon name="target" /></span>
   </div>
   <div class="calculator-layout">
     <form [formGroup]="calculator" (ngSubmit)="calculate()" class="calculator-form" novalidate>
@@ -79,7 +79,7 @@
         >
       }
       <button class="button primary full" [disabled]="calculating()">
-        {{ calculating() ? 'Calculating…' : 'Explore my projection' }}<wp-icon name="arrow" />
+        {{ calculating() ? 'Calculating…' : 'Explore my projection' }}<ml-icon name="arrow" />
       </button>
     </form>
     <div class="calculator-result">
@@ -94,7 +94,7 @@
             p.gap <= 0 ? 'Your scenario reaches your target' : 'Room to build toward your target'
           }}</span>
         </div>
-        <wp-chart
+        <ml-chart
           [values]="projectionValues()"
           [labels]="projectionLabels()"
           label="Estimated retirement balance by age"
@@ -112,7 +112,7 @@
           </div>
         </div>
         <div class="projection-insight">
-          <wp-icon name="leaf" />
+          <ml-icon name="leaf" />
           <p>
             To reach your target, this scenario calls for approximately
             <strong>{{ p.monthlyNeeded | currency: 'USD' : 'symbol' : '1.0-0' }} per month</strong>.
@@ -120,7 +120,7 @@
           </p>
         </div>
       } @else {
-        <wp-state
+        <ml-state
           title="Imagine your next chapter"
           description="Enter your savings and contribution plan to explore a retirement projection."
           icon="target"
@@ -142,13 +142,13 @@
   <span class="muted">One step closer, every day.</span>
 </div>
 @if (loading() || error()) {
-  <wp-state [loading]="loading()" [error]="error()" (retry)="load()" />
+  <ml-state [loading]="loading()" [error]="error()" (retry)="load()" />
 } @else {
   <section class="goals-grid">
     @for (goal of goals(); track goal.id) {
       <article class="card goal-card">
         <div class="goal-top">
-          <span class="circle-icon teal"><wp-icon name="target" /></span
+          <span class="circle-icon teal"><ml-icon name="target" /></span
           ><span class="pill neutral">{{ percent(goal) | number: '1.0-0' }}% there</span>
         </div>
         <h2>{{ goal.name }}</h2>
@@ -174,30 +174,30 @@
         </div>
         <div class="account-actions">
           <button class="button secondary small" (click)="open(goal)">
-            <wp-icon name="edit" /> Update goal</button
+            <ml-icon name="edit" /> Update goal</button
           ><button
             class="icon-button danger"
             (click)="deleting.set(goal); formError.set('')"
             [attr.aria-label]="'Remove ' + goal.name"
           >
-            <wp-icon name="trash" />
+            <ml-icon name="trash" />
           </button>
         </div>
       </article>
     } @empty {
       <div class="card full-span">
-        <wp-state
+        <ml-state
           title="A destination makes all the difference"
           description="Create a goal and give your retirement savings a purpose."
           icon="target"
-          ><button class="button primary" (click)="open()">Create your first goal</button></wp-state
+          ><button class="button primary" (click)="open()">Create your first goal</button></ml-state
         >
       </div>
     }
   </section>
 }
 @if (editing()) {
-  <wp-dialog
+  <ml-dialog
     [title]="selected() ? 'Update your goal' : 'Create a retirement goal'"
     (closed)="editing.set(false)"
   >
@@ -269,11 +269,11 @@
           {{ saving() ? 'Saving…' : 'Save goal' }}
         </button>
       </div>
-    </form></wp-dialog
+    </form></ml-dialog
   >
 }
 @if (deleting(); as goal) {
-  <wp-dialog title="Remove this goal?" (closed)="deleting.set(null)"
+  <ml-dialog title="Remove this goal?" (closed)="deleting.set(null)"
     ><p>
       This removes <strong>{{ goal.name }}</strong
       >. Your IRA balances and transactions are unchanged.
@@ -286,6 +286,6 @@
       ><button class="button danger-button" [disabled]="saving()" (click)="remove()">
         {{ saving() ? 'Removing…' : 'Remove goal' }}
       </button>
-    </div></wp-dialog
+    </div></ml-dialog
   >
 }

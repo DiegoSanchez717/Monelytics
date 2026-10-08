@@ -48,7 +48,7 @@ export class ApiService {
 export function errorMessage(error: unknown): string {
   if (error instanceof HttpErrorResponse) {
     if (error.status === 0)
-      return 'We could not reach WealthPath. Please check your connection and try again.';
+      return 'We could not reach Monelytics. Please check your connection and try again.';
     if (error.status === 401)
       return error.error?.detail ?? 'Your session has expired. Please sign in again.';
     const fields: unknown = error.error?.errors;

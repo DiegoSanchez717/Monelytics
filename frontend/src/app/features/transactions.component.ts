@@ -8,7 +8,7 @@ import { DialogComponent } from '../shared/dialog.component';
 import { IconComponent } from '../shared/icon.component';
 import { StateComponent } from '../shared/state.component';
 @Component({
-  selector: 'wp-transactions',
+  selector: 'ml-transactions',
   imports: [
     CurrencyPipe,
     DatePipe,

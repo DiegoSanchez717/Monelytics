@@ -89,7 +89,7 @@ test('registration, IRA creation, beneficiaries, transaction editing and deletio
 test('demo dashboard is accessible at desktop and mobile sizes', async ({ page }) => {
   await page.goto('/login');
   await page.getByRole('button', { name: /Fill demo credentials/ }).click();
-  await page.getByRole('button', { name: 'Sign in to WealthPath' }).click();
+  await page.getByRole('button', { name: 'Sign in to Monelytics' }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
   await expect(page.locator('.balance-amount')).toBeVisible();
   await page.setViewportSize({ width: 1440, height: 1050 });
@@ -120,9 +120,9 @@ test('public landing page has no accessibility violations', async ({ page }) => 
 
 test('administrator can review the audit trail in the protected UI', async ({ page }) => {
   await page.goto('/login');
-  await page.getByLabel('Email address').fill('admin@wealthpath.dev');
+  await page.getByLabel('Email address').fill('admin@monelytics.dev');
   await page.getByLabel(/^Password/).fill('AdminPath!2026');
-  await page.getByRole('button', { name: 'Sign in to WealthPath' }).click();
+  await page.getByRole('button', { name: 'Sign in to Monelytics' }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
   await page.getByRole('link', { name: 'Audit log', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'The audit log.' })).toBeVisible();

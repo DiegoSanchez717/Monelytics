@@ -7,19 +7,19 @@
       time.
     </p>
     <div class="auth-quote">
-      <span class="circle-icon teal"><wp-icon name="leaf" /></span>
+      <span class="circle-icon teal"><ml-icon name="leaf" /></span>
       <div>
         <strong>Start where you are.</strong>
         <p>Build toward where you want to be.</p>
       </div>
     </div>
     <div class="auth-trust">
-      <wp-icon name="shield" /> Secure sessions. Optional two-step verification.
+      <ml-icon name="shield" /> Secure sessions. Optional two-step verification.
     </div>
   </div>
   <div class="card auth-card">
     <div class="auth-card-icon">
-      <wp-icon [name]="register ? 'leaf' : 'wallet'" />
+      <ml-icon [name]="register ? 'leaf' : 'wallet'" />
     </div>
     <h2>{{ register ? 'Find your path.' : 'Welcome back.' }}</h2>
     <p>
@@ -109,7 +109,7 @@
       @if (register) {
         <label class="checkbox-label"
           ><input type="checkbox" formControlName="consent" /><span
-            >I understand WealthPath is a planning application and does not hold or transfer
+            >I understand Monelytics is a planning application and does not hold or transfer
             money.</span
           ></label
         ><span class="field-error" [hidden]="!invalid('consent')"
@@ -120,8 +120,8 @@
         @if (busy()) {
           <span class="spinner small"></span>
         }
-        {{ busy() ? 'Please wait…' : register ? 'Create your account' : 'Sign in to WealthPath'
-        }}<wp-icon name="arrow" />
+        {{ busy() ? 'Please wait…' : register ? 'Create your account' : 'Sign in to Monelytics'
+        }}<ml-icon name="arrow" />
       </button>
     </form>
     <p class="auth-switch">
@@ -135,8 +135,8 @@
         <span class="eyebrow">TAKE A LOOK AROUND</span>
         <p>Use the demo account to explore.</p>
         <button type="button" class="text-button" (click)="fillDemo()">
-          Fill demo credentials <wp-icon name="arrow" /></button
-        ><span>demo&#64;wealthpath.dev · DemoPath!2026</span>
+          Fill demo credentials <ml-icon name="arrow" /></button
+        ><span>demo&#64;monelytics.dev · DemoPath!2026</span>
       </div>
     }
   </div>

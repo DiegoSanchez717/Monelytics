@@ -1,4 +1,4 @@
-package dev.wealthpath;
+package dev.monelytics;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -54,11 +54,11 @@ class ApiIntegrationTest {
     mvc.perform(get("/v3/api-docs"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.openapi").value(org.hamcrest.Matchers.startsWith("3.")))
-        .andExpect(jsonPath("$.info.title").value("WealthPath API"))
+        .andExpect(jsonPath("$.info.title").value("Monelytics API"))
         .andExpect(jsonPath("$.paths['/api/accounts'].get").exists())
         .andExpect(jsonPath("$.paths['/api/transactions'].post").exists())
         .andExpect(
-            jsonPath("$.components.securitySchemes.session.name").value("WEALTHPATH_SESSION"))
+            jsonPath("$.components.securitySchemes.session.name").value("MONELYTICS_SESSION"))
         .andExpect(jsonPath("$.components.securitySchemes.csrf.name").value("X-XSRF-TOKEN"));
   }
 
@@ -344,7 +344,7 @@ class ApiIntegrationTest {
             .andExpect(status().isCreated())
             .andReturn();
     return Arrays.stream(result.getResponse().getCookies())
-        .filter(c -> c.getName().equals("WEALTHPATH_SESSION"))
+        .filter(c -> c.getName().equals("MONELYTICS_SESSION"))
         .findFirst()
         .orElseThrow(
             () ->

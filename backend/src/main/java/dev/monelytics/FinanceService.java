@@ -1,6 +1,6 @@
-package dev.wealthpath;
+package dev.monelytics;
 
-import static dev.wealthpath.ApiDtos.*;
+import static dev.monelytics.ApiDtos.*;
 
 import jakarta.persistence.criteria.Predicate;
 import java.math.*;
@@ -30,7 +30,7 @@ class FinanceService {
       TransactionRepository transactions,
       GoalRepository goals,
       AuditService audit,
-      @Value("${wealthpath.contribution-limit}") BigDecimal limit) {
+      @Value("${monelytics.contribution-limit}") BigDecimal limit) {
     this.users = users;
     this.accounts = accounts;
     this.transactions = transactions;

@@ -1,4 +1,4 @@
-package dev.wealthpath;
+package dev.monelytics;
 
 import io.swagger.v3.oas.models.*;
 import io.swagger.v3.oas.models.info.Info;
@@ -12,7 +12,7 @@ class OpenApiConfiguration {
     return new OpenAPI()
         .info(
             new Info()
-                .title("WealthPath API")
+                .title("Monelytics API")
                 .version("1.0.0")
                 .description(
                     "Retirement portfolio tracking. Authenticate with /api/auth/login. Retrieve /api/auth/csrf before any mutation and refresh it after login/logout. Monetary values are USD. Projections and configurable contribution policies are educational assumptions."))
@@ -23,7 +23,7 @@ class OpenApiConfiguration {
                     new SecurityScheme()
                         .type(SecurityScheme.Type.APIKEY)
                         .in(SecurityScheme.In.COOKIE)
-                        .name("WEALTHPATH_SESSION"))
+                        .name("MONELYTICS_SESSION"))
                 .addSecuritySchemes(
                     "csrf",
                     new SecurityScheme()

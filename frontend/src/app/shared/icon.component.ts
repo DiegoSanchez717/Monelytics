@@ -27,7 +27,7 @@ const paths: Record<string, string> = {
   info: 'M12 11v5m0-9v.1m9 4.9a9 9 0 1 1-18 0 9 9 0 0 1 18 0',
 };
 @Component({
-  selector: 'wp-icon',
+  selector: 'ml-icon',
   template:
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path [attr.d]="path()"/></svg>',
   styles: [

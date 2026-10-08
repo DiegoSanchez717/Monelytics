@@ -4,7 +4,7 @@ import { AuthService } from '../core/auth.service';
 import { errorMessage } from '../core/api.service';
 import { IconComponent } from '../shared/icon.component';
 @Component({
-  selector: 'wp-settings',
+  selector: 'ml-settings',
   imports: [ReactiveFormsModule, IconComponent],
   templateUrl: './settings.component.html',
 })

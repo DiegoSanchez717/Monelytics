@@ -10,7 +10,7 @@ import {
 } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
-export class WealthPathStack extends Stack {
+export class MonelyticsStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
@@ -51,8 +51,8 @@ export class WealthPathStack extends Stack {
       engine: rds.DatabaseInstanceEngine.postgres({ version: rds.PostgresEngineVersion.of('17.11', '17') }),
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T4G, ec2.InstanceSize.MICRO),
       vpc, vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
-      securityGroups: [databaseSecurity], databaseName: 'wealthpath',
-      credentials: rds.Credentials.fromGeneratedSecret('wealthpath'),
+      securityGroups: [databaseSecurity], databaseName: 'monelytics',
+      credentials: rds.Credentials.fromGeneratedSecret('monelytics'),
       publiclyAccessible: false, storageEncrypted: true, allocatedStorage: 20,
       maxAllocatedStorage: 100, multiAz: true, backupRetention: Duration.days(7),
       deletionProtection: true, removalPolicy: RemovalPolicy.SNAPSHOT,
@@ -77,7 +77,7 @@ export class WealthPathStack extends Stack {
       image: ecs.ContainerImage.fromAsset(path.resolve(__dirname, '../../../backend'), { platform: ecrAssets.Platform.LINUX_AMD64 }),
       logging: ecs.LogDrivers.awsLogs({ logGroup: applicationLogs, streamPrefix: 'api' }),
       environment: {
-        DATABASE_URL: `jdbc:postgresql://${database.dbInstanceEndpointAddress}:5432/wealthpath?sslmode=require`,
+        DATABASE_URL: `jdbc:postgresql://${database.dbInstanceEndpointAddress}:5432/monelytics?sslmode=require`,
         COOKIE_SECURE: 'true', DEMO_ENABLED: 'false', API_DOCS_ENABLED: 'false',
         SERVER_FORWARD_HEADERS_STRATEGY: 'framework',
         JAVA_TOOL_OPTIONS: '-XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError',
@@ -116,7 +116,7 @@ export class WealthPathStack extends Stack {
     });
     listener.addTargets('ApiTargets', {
       port: 8080, protocol: elbv2.ApplicationProtocol.HTTP,
-      priority: 1, conditions: [elbv2.ListenerCondition.httpHeader('X-WealthPath-Origin', [originHeader.valueAsString])],
+      priority: 1, conditions: [elbv2.ListenerCondition.httpHeader('X-Monelytics-Origin', [originHeader.valueAsString])],
       targets: [service], deregistrationDelay: Duration.seconds(30),
       healthCheck: { path: '/actuator/health/readiness', healthyHttpCodes: '200' },
     });
@@ -157,7 +157,7 @@ export class WealthPathStack extends Stack {
     const apiOrigin = new origins.HttpOrigin(apiDomain.valueAsString, {
       protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
       originSslProtocols: [cloudfront.OriginSslPolicy.TLS_V1_2],
-      customHeaders: { 'X-WealthPath-Origin': originHeader.valueAsString },
+      customHeaders: { 'X-Monelytics-Origin': originHeader.valueAsString },
     });
     const apiBehavior: cloudfront.BehaviorOptions = {
       origin: apiOrigin, viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.HTTPS_ONLY,

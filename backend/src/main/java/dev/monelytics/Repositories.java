@@ -1,4 +1,4 @@
-package dev.wealthpath;
+package dev.monelytics;
 
 import jakarta.persistence.LockModeType;
 import java.math.BigDecimal;
@@ -50,22 +50,22 @@ interface TransactionRepository
       Specification<LedgerTransaction> specification, Pageable pageable);
 
   @Query(
-      "select t.account.id as accountId, sum(t.amount) as total from LedgerTransaction t where t.account.user.id=:userId and t.type=dev.wealthpath.TransactionType.CONTRIBUTION and t.date between :start and :end group by t.account.id")
+      "select t.account.id as accountId, sum(t.amount) as total from LedgerTransaction t where t.account.user.id=:userId and t.type=dev.monelytics.TransactionType.CONTRIBUTION and t.date between :start and :end group by t.account.id")
   List<AccountContribution> contributionsByAccount(
       @Param("userId") UUID userId, @Param("start") LocalDate start, @Param("end") LocalDate end);
 
   @Query(
-      "select coalesce(sum(case when t.type=dev.wealthpath.TransactionType.WITHDRAWAL then -t.amount else t.amount end),0) from LedgerTransaction t where t.account.user.id=:userId and t.date>:end and t.account.createdAt<:cutoff")
+      "select coalesce(sum(case when t.type=dev.monelytics.TransactionType.WITHDRAWAL then -t.amount else t.amount end),0) from LedgerTransaction t where t.account.user.id=:userId and t.date>:end and t.account.createdAt<:cutoff")
   BigDecimal effectAfter(
       @Param("userId") UUID userId, @Param("end") LocalDate end, @Param("cutoff") Instant cutoff);
 
   @Query(
-      "select coalesce(sum(t.amount),0) from LedgerTransaction t where t.account.user.id=:userId and t.type=dev.wealthpath.TransactionType.CONTRIBUTION and t.date between :start and :end")
+      "select coalesce(sum(t.amount),0) from LedgerTransaction t where t.account.user.id=:userId and t.type=dev.monelytics.TransactionType.CONTRIBUTION and t.date between :start and :end")
   BigDecimal contributions(
       @Param("userId") UUID userId, @Param("start") LocalDate start, @Param("end") LocalDate end);
 
   @Query(
-      "select coalesce(sum(t.amount),0) from LedgerTransaction t where t.account.id=:accountId and t.type=dev.wealthpath.TransactionType.CONTRIBUTION and t.date between :start and :end")
+      "select coalesce(sum(t.amount),0) from LedgerTransaction t where t.account.id=:accountId and t.type=dev.monelytics.TransactionType.CONTRIBUTION and t.date between :start and :end")
   BigDecimal accountContributions(
       @Param("accountId") UUID accountId,
       @Param("start") LocalDate start,

@@ -4,7 +4,7 @@ import { AuthService } from './core/auth.service';
 import { IconComponent } from './shared/icon.component';
 import { errorMessage } from './core/api.service';
 @Component({
-  selector: 'wp-root',
+  selector: 'ml-root',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent],
   templateUrl: './app.component.html',
 })

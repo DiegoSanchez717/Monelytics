@@ -20,7 +20,7 @@ docker compose stop                                # Keep PostgreSQL data
 docker compose down                                # Remove containers, keep data
 ```
 
-PostgreSQL data is stored in the named `wealthpath_postgres-data` volume. `docker compose down --volumes` permanently removes local data and should only be used when you intend to reset the demo. Changing `DATABASE_PASSWORD` after initializing this volume does not change PostgreSQL's stored password; use an authorized PostgreSQL password change or reset the demonstration volume.
+PostgreSQL data is stored in the named `monelytics_postgres-data` volume. `docker compose down --volumes` permanently removes local data and should only be used when you intend to reset the demo. Changing `DATABASE_PASSWORD` after initializing this volume does not change PostgreSQL's stored password; use an authorized PostgreSQL password change or reset the demonstration volume.
 
 The application and database start with health checks and dependency ordering. Java migrations run before readiness succeeds. Frontend and backend production Dockerfiles use unprivileged users; both applications listen on 8080. Run the repository's tests independently of a running demo installation; PostgreSQL integration tests start disposable Testcontainers databases.
 

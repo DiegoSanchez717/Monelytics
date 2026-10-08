@@ -1,5 +1,5 @@
 {
-  "name": "wealthpath-e2e",
+  "name": "monelytics-e2e",
   "private": true,
   "type": "module",
   "scripts": {"test": "playwright test", "test:ui": "playwright test --ui"},

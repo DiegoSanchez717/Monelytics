@@ -1,4 +1,4 @@
-package dev.wealthpath;
+package dev.monelytics;
 
 import java.util.UUID;
 import org.springframework.stereotype.Service;

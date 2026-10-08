@@ -7,7 +7,7 @@ import { DialogComponent } from '../shared/dialog.component';
 import { IconComponent } from '../shared/icon.component';
 import { StateComponent } from '../shared/state.component';
 @Component({
-  selector: 'wp-accounts',
+  selector: 'ml-accounts',
   imports: [
     CurrencyPipe,
     DecimalPipe,

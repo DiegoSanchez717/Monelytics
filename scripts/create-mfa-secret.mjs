@@ -6,13 +6,13 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 if (!process.env.AWS_REGION) throw new Error('Set AWS_REGION and authenticate to AWS first');
-const directory = mkdtempSync(path.join(tmpdir(), 'wealthpath-secret-'));
+const directory = mkdtempSync(path.join(tmpdir(), 'monelytics-secret-'));
 const file = path.join(directory, 'secret.json');
 try {
   // A temporary input file avoids putting the encryption key in command arguments or logs.
   writeFileSync(file, JSON.stringify({
-    Name: 'wealthpath/mfa-encryption-key',
-    Description: 'Stable AES-256 encryption key for WealthPath TOTP secrets; do not rotate without re-encryption',
+    Name: 'monelytics/mfa-encryption-key',
+    Description: 'Stable AES-256 encryption key for Monelytics TOTP secrets; do not rotate without re-encryption',
     SecretString: randomBytes(32).toString('base64'),
   }), { mode: 0o600 });
   if (process.platform !== 'win32') chmodSync(directory, 0o700);

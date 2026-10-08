@@ -1,4 +1,4 @@
-package dev.wealthpath;
+package dev.monelytics;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;

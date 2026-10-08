@@ -1,6 +1,6 @@
-package dev.wealthpath;
+package dev.monelytics;
 
-import static dev.wealthpath.ApiDtos.*;
+import static dev.monelytics.ApiDtos.*;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -116,14 +116,14 @@ class AuthService {
     user.mfaSecret = totp.encrypt(secret);
     user.lastMfaStep = -1;
     audit.record(id, "MFA_SETUP", id, "Authenticator setup initiated");
-    String label = URLEncoder.encode("WealthPath:" + user.email, StandardCharsets.UTF_8);
+    String label = URLEncoder.encode("Monelytics:" + user.email, StandardCharsets.UTF_8);
     return new MfaSetup(
         secret,
         "otpauth://totp/"
             + label
             + "?secret="
             + secret
-            + "&issuer=WealthPath&algorithm=SHA1&digits=6&period=30");
+            + "&issuer=Monelytics&algorithm=SHA1&digits=6&period=30");
   }
 
   @Transactional

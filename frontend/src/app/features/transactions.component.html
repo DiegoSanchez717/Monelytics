@@ -5,16 +5,16 @@
     <p>Follow the contributions and activity shaping your future.</p>
   </div>
   <button class="button primary" (click)="open()" [disabled]="!accounts().length">
-    <wp-icon name="plus" /> Add transaction
+    <ml-icon name="plus" /> Add transaction
   </button>
 </div>
 @if (success()) {
-  <div class="alert success" role="status"><wp-icon name="check" />{{ success() }}</div>
+  <div class="alert success" role="status"><ml-icon name="check" />{{ success() }}</div>
 }
 <section class="card section-card">
   <form [formGroup]="filters" (ngSubmit)="filter()" class="filter-form">
     <label class="search-field"
-      ><span class="sr-only">Search transactions</span><wp-icon name="search" /><input
+      ><span class="sr-only">Search transactions</span><ml-icon name="search" /><input
         formControlName="search"
         placeholder="Search your activity…" /></label
     ><label
@@ -36,7 +36,7 @@
       </select></label
     ><button class="button secondary" type="submit">Apply filters</button
     ><button type="button" class="text-button" (click)="advanced.set(!advanced())">
-      {{ advanced() ? 'Less' : 'More' }} filters <wp-icon name="chevron" />
+      {{ advanced() ? 'Less' : 'More' }} filters <ml-icon name="chevron" />
     </button>
     @if (advanced()) {
       <div class="advanced-filters">
@@ -50,7 +50,7 @@
     <div class="alert error" role="alert">{{ filterError() }}</div>
   }
   @if (loading() || error()) {
-    <wp-state [loading]="loading()" [error]="error()" (retry)="load()" />
+    <ml-state [loading]="loading()" [error]="error()" (retry)="load()" />
   } @else if (pageData(); as data) {
     <div class="table-meta">
       <span
@@ -89,7 +89,7 @@
                       class="circle-icon"
                       [class.coral]="tx.type === 'WITHDRAWAL'"
                       [class.teal]="tx.type !== 'WITHDRAWAL'"
-                      ><wp-icon [name]="tx.type === 'WITHDRAWAL' ? 'arrows' : 'plus'" /></span
+                      ><ml-icon [name]="tx.type === 'WITHDRAWAL' ? 'arrows' : 'plus'" /></span
                     ><strong>{{ tx.description }}</strong>
                   </div>
                 </td>
@@ -113,13 +113,13 @@
                       (click)="open(tx)"
                       [attr.aria-label]="'Edit ' + tx.description"
                     >
-                      <wp-icon name="edit" /></button
+                      <ml-icon name="edit" /></button
                     ><button
                       class="icon-button danger"
                       (click)="deleting.set(tx); formError.set('')"
                       [attr.aria-label]="'Delete ' + tx.description"
                     >
-                      <wp-icon name="trash" />
+                      <ml-icon name="trash" />
                     </button>
                   </div>
                 </td>
@@ -147,7 +147,7 @@
         </div>
       </div>
     } @else {
-      <wp-state
+      <ml-state
         title="Nothing here just yet"
         description="Try different filters or add your first transaction."
         icon="arrows"
@@ -157,16 +157,16 @@
         } @else {
           <button class="button secondary" (click)="resetFilters()">Clear filters</button>
         }
-      </wp-state>
+      </ml-state>
     }
   }
 </section>
 <p class="financial-note">
-  Transactions are records for planning purposes. WealthPath does not move funds between financial
+  Transactions are records for planning purposes. Monelytics does not move funds between financial
   institutions.
 </p>
 @if (editing()) {
-  <wp-dialog
+  <ml-dialog
     [title]="selected() ? 'Edit transaction' : 'Add a transaction'"
     (closed)="editing.set(false)"
   >
@@ -218,7 +218,7 @@
         ></label
       >
       <div class="form-note">
-        <wp-icon name="info" />
+        <ml-icon name="info" />
         <p>
           Contributions, rollovers and returns increase the balance. Withdrawals decrease it.
           Editing a transaction updates the account balance automatically.
@@ -230,11 +230,11 @@
           {{ saving() ? 'Saving…' : 'Save transaction' }}
         </button>
       </div>
-    </form></wp-dialog
+    </form></ml-dialog
   >
 }
 @if (deleting(); as tx) {
-  <wp-dialog title="Remove this transaction?" (closed)="deleting.set(null)"
+  <ml-dialog title="Remove this transaction?" (closed)="deleting.set(null)"
     ><p>
       This removes <strong>{{ tx.description }}</strong> and reverses its effect on your account
       balance.
@@ -247,6 +247,6 @@
       ><button class="button danger-button" [disabled]="saving()" (click)="remove()">
         {{ saving() ? 'Removing…' : 'Remove transaction' }}
       </button>
-    </div></wp-dialog
+    </div></ml-dialog
   >
 }

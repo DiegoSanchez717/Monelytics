@@ -1,4 +1,4 @@
-package dev.wealthpath;
+package dev.monelytics;
 
 import java.nio.*;
 import java.nio.charset.StandardCharsets;
@@ -16,7 +16,7 @@ class TotpService {
   private final SecureRandom random = new SecureRandom();
   private final SecretKeySpec key;
 
-  TotpService(@Value("${wealthpath.mfa-encryption-key}") String encodedKey) {
+  TotpService(@Value("${monelytics.mfa-encryption-key}") String encodedKey) {
     byte[] decoded;
     try {
       decoded = Base64.getDecoder().decode(encodedKey);

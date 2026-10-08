@@ -4,13 +4,13 @@
     <h1>Your IRA <span>accounts.</span></h1>
     <p>A clear view of the savings behind your next chapter.</p>
   </div>
-  <button class="button primary" (click)="open()"><wp-icon name="plus" /> Add IRA account</button>
+  <button class="button primary" (click)="open()"><ml-icon name="plus" /> Add IRA account</button>
 </div>
 @if (success()) {
-  <div class="alert success" role="status"><wp-icon name="check" />{{ success() }}</div>
+  <div class="alert success" role="status"><ml-icon name="check" />{{ success() }}</div>
 }
 @if (loading() || error()) {
-  <wp-state [loading]="loading()" [error]="error()" (retry)="load()" />
+  <ml-state [loading]="loading()" [error]="error()" (retry)="load()" />
 } @else {
   <div class="account-summary card">
     <div>
@@ -29,7 +29,7 @@
             class="circle-icon"
             [class.teal]="account.type === 'ROTH_IRA'"
             [class.coral]="account.type === 'TRADITIONAL_IRA'"
-            ><wp-icon name="wallet" /></span
+            ><ml-icon name="wallet" /></span
           ><span class="pill neutral">{{
             account.type === 'ROTH_IRA' ? 'Roth IRA' : 'Traditional IRA'
           }}</span>
@@ -44,7 +44,7 @@
           <div class="beneficiary-heading">
             <h3>Beneficiaries</h3>
             <button class="text-button" (click)="openBeneficiaries(account)">
-              Manage <wp-icon name="edit" />
+              Manage <ml-icon name="edit" />
             </button>
           </div>
           @if (account.beneficiaries.length) {
@@ -64,37 +64,37 @@
         </div>
         <div class="account-actions">
           <button class="button secondary small" (click)="open(account)">
-            <wp-icon name="edit" /> Edit account</button
+            <ml-icon name="edit" /> Edit account</button
           ><button
             class="icon-button danger"
             (click)="deleting.set(account)"
             [attr.aria-label]="'Delete ' + account.name"
           >
-            <wp-icon name="trash" />
+            <ml-icon name="trash" />
           </button>
         </div>
       </article>
     } @empty {
       <div class="card full-span">
-        <wp-state
+        <ml-state
           title="Your future starts here"
           description="Add your first Roth or Traditional IRA to begin tracking retirement savings."
           icon="wallet"
-          ><button class="button primary" (click)="open()">Add your first account</button></wp-state
+          ><button class="button primary" (click)="open()">Add your first account</button></ml-state
         >
       </div>
     }
   </section>
   <div class="quiet-note">
-    <wp-icon name="info" />
+    <ml-icon name="info" />
     <p>
-      WealthPath records your IRA balances and activity. Opening an account here does not create a
+      Monelytics records your IRA balances and activity. Opening an account here does not create a
       financial account at a bank or brokerage.
     </p>
   </div>
 }
 @if (editing()) {
-  <wp-dialog
+  <ml-dialog
     [title]="selected() ? 'Edit IRA account' : 'Add an IRA account'"
     (closed)="editing.set(false)"
   >
@@ -134,11 +134,11 @@
           {{ saving() ? 'Saving…' : 'Save account' }}
         </button>
       </div>
-    </form></wp-dialog
+    </form></ml-dialog
   >
 }
 @if (beneficiaryAccount(); as account) {
-  <wp-dialog title="Plan for your people" (closed)="beneficiaryAccount.set(null)"
+  <ml-dialog title="Plan for your people" (closed)="beneficiaryAccount.set(null)"
     ><p class="muted">
       Assign beneficiaries for {{ account.name }}. Allocations must total 100%. Remove all entries
       to clear assignments.
@@ -174,7 +174,7 @@
                 [attr.aria-label]="'Remove beneficiary ' + (i + 1)"
                 (click)="beneficiaryControls.removeAt(i)"
               >
-                <wp-icon name="trash" />
+                <ml-icon name="trash" />
               </button>
             </div>
           </div>
@@ -187,7 +187,7 @@
         <span>Total allocation</span><strong>{{ allocationTotal() | number: '1.0-2' }}%</strong>
       </div>
       <button type="button" class="text-button" (click)="addBeneficiary()">
-        <wp-icon name="plus" /> Add beneficiary
+        <ml-icon name="plus" /> Add beneficiary
       </button>
       <div class="dialog-actions">
         <button type="button" class="button secondary" (click)="beneficiaryAccount.set(null)">
@@ -196,11 +196,11 @@
           {{ saving() ? 'Saving…' : 'Save beneficiaries' }}
         </button>
       </div>
-    </form></wp-dialog
+    </form></ml-dialog
   >
 }
 @if (deleting(); as account) {
-  <wp-dialog title="Remove this account?" (closed)="deleting.set(null)"
+  <ml-dialog title="Remove this account?" (closed)="deleting.set(null)"
     ><p>
       This removes <strong>{{ account.name }}</strong> and its beneficiaries. Accounts with recorded
       transactions cannot be removed; remove their activity first. This action cannot be undone.
@@ -213,6 +213,6 @@
       ><button class="button danger-button" [disabled]="saving()" (click)="remove()">
         {{ saving() ? 'Removing…' : 'Remove account' }}
       </button>
-    </div></wp-dialog
+    </div></ml-dialog
   >
 }

@@ -1,6 +1,6 @@
 # Security model
 
-WealthPath demonstrates financial application engineering using synthetic information. It does not connect to banks, move money, store banking credentials, or claim regulatory compliance.
+Monelytics demonstrates financial application engineering using synthetic information. It does not connect to banks, move money, store banking credentials, or claim regulatory compliance.
 
 ## Implemented controls
 

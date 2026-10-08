@@ -1,7 +1,7 @@
 import { Component, input, output } from '@angular/core';
 import { IconComponent } from './icon.component';
 @Component({
-  selector: 'wp-state',
+  selector: 'ml-state',
   imports: [IconComponent],
   templateUrl: './state.component.html',
 })

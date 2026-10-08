@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { IconComponent } from './icon.component';
 @Component({
-  selector: 'wp-dialog',
+  selector: 'ml-dialog',
   imports: [IconComponent],
   templateUrl: './dialog.component.html',
   styleUrl: './dialog.component.css',

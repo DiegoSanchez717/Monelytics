@@ -1,4 +1,4 @@
-package dev.wealthpath;
+package dev.monelytics;
 
 import static org.assertj.core.api.Assertions.*;
 

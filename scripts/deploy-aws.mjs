@@ -49,7 +49,7 @@ for (const [environmentName, contextName] of Object.entries(contextSettings)) {
   if (process.env[environmentName]) context.push('--context', `${contextName}=${process.env[environmentName]}`);
 }
 if (!execute) {
-  run(process.execPath, [cdk, 'synth', 'WealthPath', '--quiet', ...context], infrastructure);
+  run(process.execPath, [cdk, 'synth', 'Monelytics', '--quiet', ...context], infrastructure);
   console.log('Synthesized only. Add --deploy to create or update billed AWS resources.');
   process.exit(0);
 }
@@ -57,17 +57,17 @@ if (!execute) {
 const parameters = [
   ['ApiOriginDomain', 'API_ORIGIN_DOMAIN'], ['AlbCertificateArn', 'ALB_CERTIFICATE_ARN'],
   ['MfaSecretArn', 'MFA_SECRET_ARN'], ['OriginHeaderSecret', 'ORIGIN_HEADER_SECRET'],
-].flatMap(([parameter, environmentName]) => ['--parameters', `WealthPath:${parameter}=${process.env[environmentName]}`]);
+].flatMap(([parameter, environmentName]) => ['--parameters', `Monelytics:${parameter}=${process.env[environmentName]}`]);
 run(process.execPath, [path.join(root, 'frontend/node_modules/@angular/cli/bin/ng.js'), 'build', '--configuration=production'], path.join(root, 'frontend'));
-run(process.execPath, [cdk, 'deploy', 'WealthPath', '--require-approval', 'never', ...context, ...parameters], infrastructure);
+run(process.execPath, [cdk, 'deploy', 'Monelytics', '--require-approval', 'never', ...context, ...parameters], infrastructure);
 
 const output = JSON.parse(run('aws', [
-  'cloudformation', 'describe-stacks', '--stack-name', 'WealthPath', '--region', process.env.AWS_REGION,
+  'cloudformation', 'describe-stacks', '--stack-name', 'Monelytics', '--region', process.env.AWS_REGION,
   '--query', 'Stacks[0].Outputs', '--output', 'json',
 ], root, true));
 const values = Object.fromEntries(output.map(entry => [entry.OutputKey, entry.OutputValue]));
 if (!values.WebsiteBucket || !values.DistributionId) throw new Error('Missing stack deployment outputs');
-const bundle = path.join(root, 'frontend/dist/wealthpath/browser');
+const bundle = path.join(root, 'frontend/dist/monelytics/browser');
 run('aws', ['s3', 'sync', bundle, `s3://${values.WebsiteBucket}`, '--delete', '--exclude', 'index.html', '--cache-control', 'public,max-age=300']);
 run('aws', ['s3', 'cp', path.join(bundle, 'index.html'), `s3://${values.WebsiteBucket}/index.html`, '--cache-control', 'no-cache,no-store,must-revalidate', '--content-type', 'text/html']);
 run('aws', ['cloudfront', 'create-invalidation', '--distribution-id', values.DistributionId, '--paths', '/*']);

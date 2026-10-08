@@ -1,4 +1,4 @@
-package dev.wealthpath;
+package dev.monelytics;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;

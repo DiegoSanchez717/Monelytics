@@ -5,7 +5,7 @@ import { AuditEntry, Page } from '../core/models';
 import { IconComponent } from '../shared/icon.component';
 import { StateComponent } from '../shared/state.component';
 @Component({
-  selector: 'wp-admin',
+  selector: 'ml-admin',
   imports: [DatePipe, IconComponent, StateComponent],
   templateUrl: './admin.component.html',
 })

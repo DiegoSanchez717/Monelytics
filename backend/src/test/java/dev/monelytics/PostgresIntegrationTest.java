@@ -1,6 +1,6 @@
-package dev.wealthpath;
+package dev.monelytics;
 
-import static dev.wealthpath.ApiDtos.*;
+import static dev.monelytics.ApiDtos.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;

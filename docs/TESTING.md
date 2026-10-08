@@ -66,7 +66,7 @@ Executed on the provided Windows workstation with Node 24.12, Java 21, and Docke
 | Runtime image security scans | Trivy 0.75.0: 0 fixable HIGH/CRITICAL findings in both final images; pgJDBC coordinate separately verified |
 | Source formatting and staged-secret checks | Passed; ignored local secrets excluded from staged files |
 
-All 75 tests passed: 33 frontend, 24 backend, 10 infrastructure, and 8 end-to-end tests. Desktop/mobile screenshots were visually inspected. Bundle transfer values are Angular CLI estimates, not measured production network performance. The [scan summary](security-scan-summary.json) records the tested image digests, timestamps, package counts, and scan scope. Trivy's JAR index did not identify the newly released PostgreSQL JDBC artifact automatically; its packaged version was checked and its explicit Maven coordinate was scanned separately.
+All 75 tests passed: 33 frontend, 24 backend, 10 infrastructure, and 8 end-to-end tests. Desktop/mobile screenshots were visually inspected. Bundle transfer values are Angular CLI estimates, not measured production network performance. The security scan record (being refreshed for the general-finance features) records the tested image digests, timestamps, package counts, and scan scope. Trivy's JAR index did not identify the newly released PostgreSQL JDBC artifact automatically; its packaged version was checked and its explicit Maven coordinate was scanned separately.
 
 ## Interpretation and limits
 

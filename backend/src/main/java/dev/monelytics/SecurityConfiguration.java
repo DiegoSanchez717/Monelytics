@@ -1,4 +1,4 @@
-package dev.wealthpath;
+package dev.monelytics;
 
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
@@ -35,10 +35,10 @@ class SecurityConfiguration {
   }
 
   @Bean
-  DefaultCookieSerializer sessionCookies(@Value("${wealthpath.cookie-secure}") boolean secure) {
+  DefaultCookieSerializer sessionCookies(@Value("${monelytics.cookie-secure}") boolean secure) {
     // Explicitly apply the shared JDBC session policy in both servlet and test environments.
     DefaultCookieSerializer serializer = new DefaultCookieSerializer();
-    serializer.setCookieName("WEALTHPATH_SESSION");
+    serializer.setCookieName("MONELYTICS_SESSION");
     serializer.setCookiePath("/");
     serializer.setUseHttpOnlyCookie(true);
     serializer.setUseSecureCookie(secure);
@@ -47,7 +47,7 @@ class SecurityConfiguration {
   }
 
   @Bean
-  CookieCsrfTokenRepository csrfRepository(@Value("${wealthpath.cookie-secure}") boolean secure) {
+  CookieCsrfTokenRepository csrfRepository(@Value("${monelytics.cookie-secure}") boolean secure) {
     CookieCsrfTokenRepository repo = CookieCsrfTokenRepository.withHttpOnlyFalse();
     repo.setCookieCustomizer(cookie -> cookie.path("/").secure(secure).sameSite("Lax"));
     return repo;

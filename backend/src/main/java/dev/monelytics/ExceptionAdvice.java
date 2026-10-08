@@ -1,4 +1,4 @@
-package dev.wealthpath;
+package dev.monelytics;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;

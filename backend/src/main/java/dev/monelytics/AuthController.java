@@ -1,6 +1,6 @@
-package dev.wealthpath;
+package dev.monelytics;
 
-import static dev.wealthpath.ApiDtos.*;
+import static dev.monelytics.ApiDtos.*;
 
 import jakarta.servlet.http.*;
 import jakarta.validation.Valid;

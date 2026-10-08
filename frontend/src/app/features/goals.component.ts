@@ -19,7 +19,7 @@ export function retirementAgeValidator(control: AbstractControl): ValidationErro
   return retirement > current ? null : { ageOrder: true };
 }
 @Component({
-  selector: 'wp-goals',
+  selector: 'ml-goals',
   imports: [
     CurrencyPipe,
     DatePipe,

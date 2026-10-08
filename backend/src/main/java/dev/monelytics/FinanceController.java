@@ -1,7 +1,7 @@
-package dev.wealthpath;
+package dev.monelytics;
 
-import static dev.wealthpath.ApiDtos.*;
-import static dev.wealthpath.AuthController.id;
+import static dev.monelytics.ApiDtos.*;
+import static dev.monelytics.AuthController.id;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;

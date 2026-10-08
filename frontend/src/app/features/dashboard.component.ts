@@ -8,7 +8,7 @@ import { ChartComponent } from '../shared/chart.component';
 import { IconComponent } from '../shared/icon.component';
 import { StateComponent } from '../shared/state.component';
 @Component({
-  selector: 'wp-dashboard',
+  selector: 'ml-dashboard',
   imports: [
     CurrencyPipe,
     DatePipe,

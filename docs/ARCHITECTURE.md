@@ -1,6 +1,6 @@
-# WealthPath architecture
+# Monelytics architecture
 
-WealthPath is an Angular single-page application, a Java 21 Spring Boot REST service, and PostgreSQL. It manages synthetic retirement accounts rather than connecting to banks. The repository remains named Monelytics; the application name is WealthPath.
+Monelytics is an Angular single-page application, a Java 21 Spring Boot REST service, and PostgreSQL. It manages synthetic retirement accounts rather than connecting to banks. The repository remains named Monelytics; the application name is Monelytics.
 
 ```mermaid
 flowchart LR

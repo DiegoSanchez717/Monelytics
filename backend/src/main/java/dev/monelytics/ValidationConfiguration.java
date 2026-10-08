@@ -1,4 +1,4 @@
-package dev.wealthpath;
+package dev.monelytics;
 
 import java.time.Clock;
 import org.springframework.context.annotation.Bean;

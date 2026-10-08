@@ -6,7 +6,7 @@
   </div>
 </div>
 @if (success()) {
-  <div class="alert success" role="status"><wp-icon name="check" />{{ success() }}</div>
+  <div class="alert success" role="status"><ml-icon name="check" />{{ success() }}</div>
 }
 @if (error()) {
   <div class="alert error" role="alert">{{ error() }}</div>
@@ -18,7 +18,7 @@
         <span class="eyebrow">THE PERSONAL PART</span>
         <h2>Your profile</h2>
       </div>
-      <span class="circle-icon teal"><wp-icon name="person" /></span>
+      <span class="circle-icon teal"><ml-icon name="person" /></span>
     </div>
     <div class="profile-intro">
       <span class="large-avatar"
@@ -51,7 +51,7 @@
           >Your email is your account’s sign-in identity.</span
         ></label
       ><button class="button primary" [disabled]="busy()">
-        {{ busy() ? 'Saving…' : 'Save profile' }}<wp-icon name="check" />
+        {{ busy() ? 'Saving…' : 'Save profile' }}<ml-icon name="check" />
       </button>
     </form>
   </section>
@@ -61,7 +61,7 @@
         <span class="eyebrow">A LITTLE EXTRA ASSURANCE</span>
         <h2>Account security</h2>
       </div>
-      <span class="circle-icon coral"><wp-icon name="shield" /></span>
+      <span class="circle-icon coral"><ml-icon name="shield" /></span>
     </div>
     <div class="security-status">
       <div>
@@ -77,7 +77,7 @@
     </div>
     @if (!showMfa()) {
       <button class="button secondary" (click)="showMfa.set(true)">
-        <wp-icon name="lock" />{{
+        <ml-icon name="lock" />{{
           auth.user()?.mfaEnabled ? 'Manage verification' : 'Set up verification'
         }}
       </button>
@@ -97,7 +97,7 @@
         >
         @if (setup(); as s) {
           <div class="mfa-setup">
-            <strong>1. Add WealthPath to your authenticator</strong>
+            <strong>1. Add Monelytics to your authenticator</strong>
             <p>
               Choose “Enter a setup key” in your authenticator app, select time-based codes, and
               enter this key.
@@ -154,7 +154,7 @@
       </form>
     }
     <div class="security-detail">
-      <wp-icon name="shield" />
+      <ml-icon name="shield" />
       <div>
         <strong>Protected, every step of the way.</strong>
         <p>
@@ -166,10 +166,10 @@
   </section>
 </div>
 <div class="quiet-note">
-  <wp-icon name="info" />
+  <ml-icon name="info" />
   <p>
     If you enable two-step verification, keep your authenticator and setup key accessible.
-    WealthPath does not offer email recovery for a lost second factor; administrators cannot view
+    Monelytics does not offer email recovery for a lost second factor; administrators cannot view
     your secret.
   </p>
 </div>

@@ -1,12 +1,11 @@
-# WealthPath
+# Monelytics
 
-[![Validate WealthPath](https://github.com/DiegoSanchez717/Monelytics/actions/workflows/ci.yml/badge.svg)](https://github.com/DiegoSanchez717/Monelytics/actions/workflows/ci.yml)
+[![Validate Monelytics](https://github.com/DiegoSanchez717/Monelytics/actions/workflows/ci.yml/badge.svg)](https://github.com/DiegoSanchez717/Monelytics/actions/workflows/ci.yml)
 
-**A clearer path to retirement.** WealthPath is a full-stack retirement finance application built in the [Monelytics repository](https://github.com/DiegoSanchez717/Monelytics). It uses Angular, TypeScript, JavaScript, HTML, CSS, Java, Spring Boot, PostgreSQL, Docker, and Amazon Web Services infrastructure.
+**A clearer path to retirement.** Monelytics is a full-stack retirement finance application built in the [Monelytics repository](https://github.com/DiegoSanchez717/Monelytics). It uses Angular, TypeScript, JavaScript, HTML, CSS, Java, Spring Boot, PostgreSQL, Docker, and Amazon Web Services infrastructure.
 
-The interface takes inspiration from the supplied dashboard reference: rounded navigation, a soft neutral background, generous balance charts, and `#48D1CC` teal / `#EF7A6C` coral accents. It has independent WealthPath branding and no company logos or proprietary assets.
+The interface takes inspiration from the supplied dashboard reference: rounded navigation, a soft neutral background, generous balance charts, and `#48D1CC` teal / `#EF7A6C` coral accents. It has independent Monelytics branding and no company logos or proprietary assets.
 
-![WealthPath retirement dashboard](docs/screenshots/dashboard-desktop.png)
 
 ## Features
 
@@ -21,7 +20,7 @@ The interface takes inspiration from the supplied dashboard reference: rounded n
 - OpenAPI/Swagger, Flyway migrations, structured JSON logs, request IDs, and health/readiness endpoints.
 - Frontend/backend tests, PostgreSQL integration tests, live browser/API tests, container builds, security scanning, and gated GitHub Actions deployment.
 
-WealthPath uses synthetic financial information. It does not hold or transfer funds, connect to banks, determine tax eligibility, or provide investment advice. The contribution threshold is an application planning policy; confirm actual eligibility and limits separately.
+Monelytics uses synthetic financial information. It does not hold or transfer funds, connect to banks, determine tax eligibility, or provide investment advice. The contribution threshold is an application planning policy; confirm actual eligibility and limits separately.
 
 ## Technology versions
 
@@ -74,8 +73,8 @@ PostgreSQL records persist in a named volume. Removing that volume deliberately 
 
 | Role | Email | Local password |
 |---|---|---|
-| User | `demo@wealthpath.dev` | `DemoPath!2026` |
-| Administrator | `admin@wealthpath.dev` | `AdminPath!2026` |
+| User | `demo@monelytics.dev` | `DemoPath!2026` |
+| Administrator | `admin@monelytics.dev` | `AdminPath!2026` |
 
 These are public synthetic demo credentials, seeded only when enabled. `.env` can override passwords on first initialization; it does not reset existing users on restart. Production disables demo seeds.
 
@@ -88,7 +87,7 @@ node scripts/setup-local.mjs
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d database
 ```
 
-Set `DATABASE_URL=jdbc:postgresql://localhost:5432/wealthpath`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`, and `MFA_ENCRYPTION_KEY` from your ignored `.env`. For local demo data set `DEMO_ENABLED=true`, `DEMO_PASSWORD`, and `ADMIN_PASSWORD`. Keep `COOKIE_SECURE=false` for loopback HTTP. Then, in separate terminals:
+Set `DATABASE_URL=jdbc:postgresql://localhost:5432/monelytics`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`, and `MFA_ENCRYPTION_KEY` from your ignored `.env`. For local demo data set `DEMO_ENABLED=true`, `DEMO_PASSWORD`, and `ADMIN_PASSWORD`. Keep `COOKIE_SECURE=false` for loopback HTTP. Then, in separate terminals:
 
 ```powershell
 cd backend

@@ -1,8 +1,8 @@
-# WealthPath interview guide
+# Monelytics interview guide
 
 ## Two-minute summary
 
-“I built WealthPath, a retirement planning application, with Angular and TypeScript, Java 21 and Spring Boot, PostgreSQL, and Docker. Users can register, sign in, optionally enable MFA, manage IRA accounts and beneficiary allocations, record and search retirement activity, and compare retirement scenarios. A dashboard derives balances and contribution progress from their records.
+“I built Monelytics, a retirement planning application, with Angular and TypeScript, Java 21 and Spring Boot, PostgreSQL, and Docker. Users can register, sign in, optionally enable MFA, manage IRA accounts and beneficiary allocations, record and search retirement activity, and compare retirement scenarios. A dashboard derives balances and contribution progress from their records.
 
 The project emphasizes secure application boundaries: HTTP-only server sessions, CSRF protection, BCrypt passwords, role checks, and ownership validation. Ledger changes update balances and audit events in a single database transaction. Automated tests cover financial calculations, forms, authentication, authorization, and live browser workflows.
 

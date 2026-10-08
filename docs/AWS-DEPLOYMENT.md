@@ -127,7 +127,7 @@ The workflow runs frontend lint, tests, build and dependency audit; Java unit an
    {
      "Version": "2012-10-17",
      "Statement": [
-       { "Effect": "Allow", "Action": ["cloudformation:DescribeStacks"], "Resource": "arn:aws:cloudformation:REGION:ACCOUNT_ID:stack/WealthPath/*" },
+       { "Effect": "Allow", "Action": ["cloudformation:DescribeStacks"], "Resource": "arn:aws:cloudformation:REGION:ACCOUNT_ID:stack/Monelytics/*" },
        { "Effect": "Allow", "Action": ["s3:ListBucket"], "Resource": "arn:aws:s3:::WEBSITE_BUCKET" },
        { "Effect": "Allow", "Action": ["s3:PutObject", "s3:DeleteObject"], "Resource": "arn:aws:s3:::WEBSITE_BUCKET/*" },
        { "Effect": "Allow", "Action": ["cloudfront:CreateInvalidation"], "Resource": "arn:aws:cloudfront::ACCOUNT_ID:distribution/DISTRIBUTION_ID" }

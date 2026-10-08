@@ -1,4 +1,4 @@
-name: Validate and deploy WealthPath
+name: Validate and deploy Monelytics
 
 on:
   push:
@@ -16,7 +16,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: wealthpath-${{ github.workflow }}-${{ github.ref }}
+  group: monelytics-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 
 jobs:
@@ -41,7 +41,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: angular-production
-          path: frontend/dist/wealthpath/browser
+          path: frontend/dist/monelytics/browser
           retention-days: 7
 
   backend:
@@ -102,11 +102,11 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
       - name: Build production image
-        run: docker build --tag wealthpath-${{ matrix.component }}:ci ./${{ matrix.component }}
+        run: docker build --tag monelytics-${{ matrix.component }}:ci ./${{ matrix.component }}
       - name: Scan operating system and application dependencies
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
         with:
-          image-ref: wealthpath-${{ matrix.component }}:ci
+          image-ref: monelytics-${{ matrix.component }}:ci
           version: 'v0.75.0'
           timeout: '20m'
           scanners: vuln
@@ -165,7 +165,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
-          role-session-name: WealthPathGitHubDeploy
+          role-session-name: MonelyticsGitHubDeploy
       - run: npm ci --prefix infrastructure && npm ci --prefix frontend
       - name: Deploy tested infrastructure and Angular bundle
         run: node scripts/deploy-aws.mjs --deploy

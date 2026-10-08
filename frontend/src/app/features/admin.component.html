@@ -4,7 +4,7 @@
     <h1>The <span>audit log.</span></h1>
     <p>A clear record of important account and security actions.</p>
   </div>
-  <span class="pill teal"><wp-icon name="shield" /> Administrator access</span>
+  <span class="pill teal"><ml-icon name="shield" /> Administrator access</span>
 </div>
 <section class="card section-card">
   <div class="card-heading">
@@ -16,7 +16,7 @@
     support traceability without revealing private account data.
   </p>
   @if (loading() || error()) {
-    <wp-state [loading]="loading()" [error]="error()" (retry)="load()" />
+    <ml-state [loading]="loading()" [error]="error()" (retry)="load()" />
   } @else if (data(); as d) {
     @if (d.content.length) {
       <div class="table-scroll">
@@ -70,7 +70,7 @@
         </div>
       </div>
     } @else {
-      <wp-state
+      <ml-state
         title="A clean slate"
         description="Important account actions will appear here as they happen."
         icon="shield"

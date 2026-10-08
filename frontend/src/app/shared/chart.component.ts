@@ -1,6 +1,6 @@
 import { Component, computed, input } from '@angular/core';
 @Component({
-  selector: 'wp-chart',
+  selector: 'ml-chart',
   templateUrl: './chart.component.html',
   styleUrl: './chart.component.css',
 })

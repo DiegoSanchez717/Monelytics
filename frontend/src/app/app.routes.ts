@@ -4,54 +4,54 @@ export const routes: Routes = [
   {
     path: '',
     loadComponent: () => import('./features/landing.component').then((m) => m.LandingComponent),
-    title: 'WealthPath · A clearer path to retirement',
+    title: 'Monelytics · A clearer path to retirement',
   },
   {
     path: 'login',
     loadComponent: () => import('./features/auth.component').then((m) => m.AuthComponent),
-    title: 'Sign in · WealthPath',
+    title: 'Sign in · Monelytics',
   },
   {
     path: 'register',
     loadComponent: () => import('./features/auth.component').then((m) => m.AuthComponent),
-    title: 'Create an account · WealthPath',
+    title: 'Create an account · Monelytics',
   },
   {
     path: 'dashboard',
     canActivate: [authGuard],
     loadComponent: () => import('./features/dashboard.component').then((m) => m.DashboardComponent),
-    title: 'Overview · WealthPath',
+    title: 'Overview · Monelytics',
   },
   {
     path: 'accounts',
     canActivate: [authGuard],
     loadComponent: () => import('./features/accounts.component').then((m) => m.AccountsComponent),
-    title: 'IRA accounts · WealthPath',
+    title: 'IRA accounts · Monelytics',
   },
   {
     path: 'transactions',
     canActivate: [authGuard],
     loadComponent: () =>
       import('./features/transactions.component').then((m) => m.TransactionsComponent),
-    title: 'Transactions · WealthPath',
+    title: 'Transactions · Monelytics',
   },
   {
     path: 'goals',
     canActivate: [authGuard],
     loadComponent: () => import('./features/goals.component').then((m) => m.GoalsComponent),
-    title: 'Retirement goals · WealthPath',
+    title: 'Retirement goals · Monelytics',
   },
   {
     path: 'settings',
     canActivate: [authGuard],
     loadComponent: () => import('./features/settings.component').then((m) => m.SettingsComponent),
-    title: 'Settings · WealthPath',
+    title: 'Settings · Monelytics',
   },
   {
     path: 'admin',
     canActivate: [authGuard, adminGuard],
     loadComponent: () => import('./features/admin.component').then((m) => m.AdminComponent),
-    title: 'Audit log · WealthPath',
+    title: 'Audit log · Monelytics',
   },
   { path: '**', redirectTo: '' },
 ];

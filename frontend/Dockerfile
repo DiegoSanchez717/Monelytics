@@ -12,6 +12,6 @@ RUN apk upgrade --no-cache
 USER 101
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY security-headers.conf /etc/nginx/security-headers.conf
-COPY --from=build /app/dist/wealthpath/browser /usr/share/nginx/html
+COPY --from=build /app/dist/monelytics/browser /usr/share/nginx/html
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s CMD wget -q -O /dev/null http://127.0.0.1:8080/health || exit 1

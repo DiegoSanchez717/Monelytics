@@ -1,10 +1,10 @@
-name: wealthpath
+name: monelytics
 services:
   database:
     image: postgres:17.11-alpine
     environment:
-      POSTGRES_DB: ${DATABASE_NAME:-wealthpath}
-      POSTGRES_USER: ${DATABASE_USERNAME:-wealthpath}
+      POSTGRES_DB: ${DATABASE_NAME:-monelytics}
+      POSTGRES_USER: ${DATABASE_USERNAME:-monelytics}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?Copy .env.example to .env and set DATABASE_PASSWORD}
     volumes:
       - postgres-data:/var/lib/postgresql/data
@@ -19,8 +19,8 @@ services:
     build:
       context: ./backend
     environment:
-      DATABASE_URL: jdbc:postgresql://database:5432/${DATABASE_NAME:-wealthpath}
-      DATABASE_USERNAME: ${DATABASE_USERNAME:-wealthpath}
+      DATABASE_URL: jdbc:postgresql://database:5432/${DATABASE_NAME:-monelytics}
+      DATABASE_USERNAME: ${DATABASE_USERNAME:-monelytics}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD:?Set DATABASE_PASSWORD}
       COOKIE_SECURE: 'false'
       DEMO_ENABLED: 'true'

@@ -124,7 +124,7 @@ test('MFA enrollment, login challenge, replay rejection, and administrator audit
   expect(disabled.ok(), await disabled.text()).toBeTruthy();
   expect((await disabled.json()).mfaEnabled).toBe(false);
   await mutate(request, 'POST', '/auth/logout');
-  const admin = await mutate(request, 'POST', '/auth/login', { email: 'admin@wealthpath.dev', password: 'AdminPath!2026' });
+  const admin = await mutate(request, 'POST', '/auth/login', { email: 'admin@monelytics.dev', password: 'AdminPath!2026' });
   expect(admin.ok(), await admin.text()).toBeTruthy();
   const audit = await request.get('/api/audit?page=0&size=10');
   expect(audit.ok()).toBeTruthy();
