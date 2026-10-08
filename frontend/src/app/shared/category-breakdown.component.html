@@ -1,0 +1,25 @@
+<div class="category-breakdown">
+  @for (category of categories(); track category.categoryId ?? category.name) {
+    <div class="category-breakdown-item">
+      <div>
+        <strong
+          ><i class="category-dot" [style.background]="category.color" aria-hidden="true"></i
+          >{{ category.name }}</strong
+        ><span>{{ category.value | currency }}</span>
+      </div>
+      <div class="category-breakdown-track">
+        <span
+          [style.width.%]="percentage(category.value)"
+          [style.background]="category.color"
+        ></span>
+      </div>
+      <span class="stat-sub"
+        >{{ percentage(category.value) | number: '1.0-1' }}% of monthly spending</span
+      >
+    </div>
+  } @empty {
+    <p class="muted category-empty">
+      Your spending picture takes shape as you add expense transactions.
+    </p>
+  }
+</div>

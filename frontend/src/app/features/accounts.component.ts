@@ -2,7 +2,8 @@ import { CurrencyPipe, DecimalPipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ApiService, errorMessage } from '../core/api.service';
-import { Account } from '../core/models';
+import { Account, AccountType } from '../core/models';
+import { accountLabel } from '../core/finance.utils';
 import { DialogComponent } from '../shared/dialog.component';
 import { IconComponent } from '../shared/icon.component';
 import { StateComponent } from '../shared/state.component';
@@ -19,6 +20,10 @@ import { StateComponent } from '../shared/state.component';
   templateUrl: './accounts.component.html',
 })
 export class AccountsComponent {
+  readonly accountLabel = accountLabel;
+  isRetirement(type: AccountType): boolean {
+    return type === 'ROTH_IRA' || type === 'TRADITIONAL_IRA';
+  }
   private readonly api = inject(ApiService);
   private readonly fb = inject(FormBuilder);
   readonly accounts = signal<Account[]>([]);
@@ -33,8 +38,11 @@ export class AccountsComponent {
   readonly formError = signal('');
   readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(80)]],
-    type: ['ROTH_IRA'],
-    openingBalance: [0, [Validators.required, Validators.min(0), Validators.max(100000000)]],
+    type: ['CHECKING'],
+    openingBalance: [
+      0,
+      [Validators.required, Validators.min(-100000000), Validators.max(100000000)],
+    ],
   });
   readonly beneficiaryForm = this.fb.group({
     beneficiaries: this.fb.array<ReturnType<typeof this.beneficiaryGroup>>([]),
@@ -73,7 +81,7 @@ export class AccountsComponent {
     this.selected.set(account ?? null);
     this.form.reset({
       name: account?.name ?? '',
-      type: account?.type ?? 'ROTH_IRA',
+      type: account?.type ?? 'CHECKING',
       openingBalance: 0,
     });
     this.formError.set('');
@@ -82,6 +90,14 @@ export class AccountsComponent {
   async save(): Promise<void> {
     this.form.markAllAsTouched();
     if (this.form.invalid) return;
+    if (
+      !this.selected() &&
+      this.form.controls.type.value !== 'CREDIT_CARD' &&
+      this.form.controls.openingBalance.value < 0
+    ) {
+      this.formError.set('Only credit card accounts can have a negative opening balance.');
+      return;
+    }
     this.saving.set(true);
     try {
       const v = this.form.getRawValue();
@@ -91,7 +107,7 @@ export class AccountsComponent {
         this.selected()?.id,
       );
       this.editing.set(false);
-      this.success.set('Your IRA account is saved.');
+      this.success.set('Your account is saved.');
       await this.load();
     } catch (error) {
       this.formError.set(errorMessage(error));

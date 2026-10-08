@@ -1,143 +1,153 @@
 <div class="page-heading">
   <div>
-    <span class="eyebrow">GIVE YOUR FUTURE A DIRECTION</span>
+    <span class="eyebrow">GIVE YOUR SAVINGS A PURPOSE</span>
     <h1>Dream it. <span>Plan it.</span></h1>
-    <p>Turn your retirement vision into a path you can follow.</p>
+    <p>A rainy-day fund. A memorable trip. A future with more freedom.</p>
   </div>
-  <button class="button primary" (click)="open()"><ml-icon name="plus" /> Create a goal</button>
+  <div class="heading-actions">
+    <button
+      class="button secondary"
+      (click)="showCalculator.set(!showCalculator())"
+      [attr.aria-expanded]="showCalculator()"
+    >
+      <ml-icon name="chart" /> Retirement calculator</button
+    ><button class="button primary" (click)="open()"><ml-icon name="plus" /> Create a goal</button>
+  </div>
 </div>
 @if (success()) {
   <div class="alert success" role="status"><ml-icon name="check" />{{ success() }}</div>
 }
-<section class="card calculator-card">
-  <div class="card-heading">
-    <div>
-      <span class="eyebrow">A LOOK AHEAD</span>
-      <h2>Your retirement calculator</h2>
-      <p class="muted">Explore the power of consistent contributions.</p>
-    </div>
-    <span class="circle-icon teal"><ml-icon name="target" /></span>
-  </div>
-  <div class="calculator-layout">
-    <form [formGroup]="calculator" (ngSubmit)="calculate()" class="calculator-form" novalidate>
-      <div class="form-row">
-        <label
-          >Current age<input
-            type="number"
-            formControlName="currentAge"
-            min="18"
-            max="90"
-            step="1" /></label
-        ><label
-          >Retirement age<input
-            type="number"
-            formControlName="retirementAge"
-            min="19"
-            max="100"
-            step="1"
-        /></label>
+@if (showCalculator()) {
+  <section class="card calculator-card">
+    <div class="card-heading">
+      <div>
+        <span class="eyebrow">A LOOK AHEAD</span>
+        <h2>Your retirement calculator</h2>
+        <p class="muted">Explore the power of consistent contributions.</p>
       </div>
-      @if (calculator.hasError('ageOrder') && calculator.touched) {
-        <span class="field-error">Retirement age must be later than your current age.</span>
-      }
-      <label
-        >Current savings ($)<input
-          type="number"
-          formControlName="currentSavings"
-          min="0"
-          max="100000000"
-          step=".01" /></label
-      ><label
-        >Monthly contribution ($)<input
-          type="number"
-          formControlName="monthlyContribution"
-          min="0"
-          max="100000"
-          step=".01"
-      /></label>
-      <div class="form-row">
+      <span class="circle-icon teal"><ml-icon name="target" /></span>
+    </div>
+    <div class="calculator-layout">
+      <form [formGroup]="calculator" (ngSubmit)="calculate()" class="calculator-form" novalidate>
+        <div class="form-row">
+          <label
+            >Current age<input
+              type="number"
+              formControlName="currentAge"
+              min="18"
+              max="90"
+              step="1" /></label
+          ><label
+            >Retirement age<input
+              type="number"
+              formControlName="retirementAge"
+              min="19"
+              max="100"
+              step="1"
+          /></label>
+        </div>
+        @if (calculator.hasError('ageOrder') && calculator.touched) {
+          <span class="field-error">Retirement age must be later than your current age.</span>
+        }
         <label
-          >Annual return (%)<input
+          >Current savings ($)<input
             type="number"
-            formControlName="annualReturn"
+            formControlName="currentSavings"
             min="0"
-            max="20"
-            step=".1" /></label
-        ><label
-          >Target balance ($)<input
-            type="number"
-            formControlName="targetAmount"
-            min="1"
             max="100000000"
+            step=".01" /></label
+        ><label
+          >Monthly contribution ($)<input
+            type="number"
+            formControlName="monthlyContribution"
+            min="0"
+            max="100000"
             step=".01"
         /></label>
+        <div class="form-row">
+          <label
+            >Annual return (%)<input
+              type="number"
+              formControlName="annualReturn"
+              min="0"
+              max="20"
+              step=".1" /></label
+          ><label
+            >Target balance ($)<input
+              type="number"
+              formControlName="targetAmount"
+              min="1"
+              max="100000000"
+              step=".01"
+          /></label>
+        </div>
+        @if (calculator.invalid && calculator.touched) {
+          <span class="field-error"
+            >Enter valid values. Ages must be whole numbers; annual return is between 0% and
+            20%.</span
+          >
+        }
+        <button class="button primary full" [disabled]="calculating()">
+          {{ calculating() ? 'Calculating…' : 'Explore my projection' }}<ml-icon name="arrow" />
+        </button>
+      </form>
+      <div class="calculator-result">
+        @if (calcError()) {
+          <div class="alert error" role="alert">{{ calcError() }}</div>
+        }
+        @if (projection(); as p) {
+          <div class="projection-top">
+            <span class="label">Your projected retirement balance</span
+            ><strong>{{ p.projectedBalance | currency: 'USD' : 'symbol' : '1.0-0' }}</strong
+            ><span class="pill" [class.teal]="p.gap <= 0" [class.coral]="p.gap > 0">{{
+              p.gap <= 0 ? 'Your scenario reaches your target' : 'Room to build toward your target'
+            }}</span>
+          </div>
+          <ml-chart
+            [values]="projectionValues()"
+            [labels]="projectionLabels()"
+            label="Estimated retirement balance by age"
+          />
+          <div class="projection-stats">
+            <div>
+              <span>Contributions & initial savings</span
+              ><strong>{{ p.totalContributions | currency: 'USD' : 'symbol' : '1.0-0' }}</strong>
+            </div>
+            <div>
+              <span>Estimated investment growth</span
+              ><strong class="positive">{{
+                p.investmentGrowth | currency: 'USD' : 'symbol' : '1.0-0'
+              }}</strong>
+            </div>
+          </div>
+          <div class="projection-insight">
+            <ml-icon name="leaf" />
+            <p>
+              To reach your target, this scenario calls for approximately
+              <strong>{{ p.monthlyNeeded | currency: 'USD' : 'symbol' : '1.0-0' }} per month</strong
+              >. Use this as a starting point for your plan.
+            </p>
+          </div>
+        } @else {
+          <ml-state
+            title="Imagine your next chapter"
+            description="Enter your savings and contribution plan to explore a retirement projection."
+            icon="target"
+          />
+        }
       </div>
-      @if (calculator.invalid && calculator.touched) {
-        <span class="field-error"
-          >Enter valid values. Ages must be whole numbers; annual return is between 0% and
-          20%.</span
-        >
-      }
-      <button class="button primary full" [disabled]="calculating()">
-        {{ calculating() ? 'Calculating…' : 'Explore my projection' }}<ml-icon name="arrow" />
-      </button>
-    </form>
-    <div class="calculator-result">
-      @if (calcError()) {
-        <div class="alert error" role="alert">{{ calcError() }}</div>
-      }
-      @if (projection(); as p) {
-        <div class="projection-top">
-          <span class="label">Your projected retirement balance</span
-          ><strong>{{ p.projectedBalance | currency: 'USD' : 'symbol' : '1.0-0' }}</strong
-          ><span class="pill" [class.teal]="p.gap <= 0" [class.coral]="p.gap > 0">{{
-            p.gap <= 0 ? 'Your scenario reaches your target' : 'Room to build toward your target'
-          }}</span>
-        </div>
-        <ml-chart
-          [values]="projectionValues()"
-          [labels]="projectionLabels()"
-          label="Estimated retirement balance by age"
-        />
-        <div class="projection-stats">
-          <div>
-            <span>Contributions & initial savings</span
-            ><strong>{{ p.totalContributions | currency: 'USD' : 'symbol' : '1.0-0' }}</strong>
-          </div>
-          <div>
-            <span>Estimated investment growth</span
-            ><strong class="positive">{{
-              p.investmentGrowth | currency: 'USD' : 'symbol' : '1.0-0'
-            }}</strong>
-          </div>
-        </div>
-        <div class="projection-insight">
-          <ml-icon name="leaf" />
-          <p>
-            To reach your target, this scenario calls for approximately
-            <strong>{{ p.monthlyNeeded | currency: 'USD' : 'symbol' : '1.0-0' }} per month</strong>.
-            Use this as a starting point for your plan.
-          </p>
-        </div>
-      } @else {
-        <ml-state
-          title="Imagine your next chapter"
-          description="Enter your savings and contribution plan to explore a retirement projection."
-          icon="target"
-        />
-      }
     </div>
-  </div>
-  <p class="financial-note">
-    Estimates use monthly compounding with contributions at the end of each month. Returns are
-    hypothetical and exclude taxes, fees, and inflation. Actual results will vary. IRA eligibility
-    and contribution limits still apply.
-  </p>
-</section>
+    <p class="financial-note">
+      Estimates use monthly compounding with contributions at the end of each month. Returns are
+      hypothetical and exclude taxes, fees, and inflation. Actual results will vary. IRA eligibility
+      and contribution limits still apply.
+    </p>
+  </section>
+}
 <div class="section-heading-row">
   <div>
     <span class="eyebrow">MILESTONES THAT MATTER</span>
-    <h2>Your retirement goals</h2>
+    <h2>Your savings goals</h2>
   </div>
   <span class="muted">One step closer, every day.</span>
 </div>
@@ -172,6 +182,12 @@
             ><strong>{{ goal.expectedReturn | number: '1.0-2' }}%</strong>
           </div>
         </div>
+        <button
+          class="button primary full goal-contribution-button"
+          (click)="openContributions(goal)"
+        >
+          <ml-icon name="plus" /> Add savings contribution
+        </button>
         <div class="account-actions">
           <button class="button secondary small" (click)="open(goal)">
             <ml-icon name="edit" /> Update goal</button
@@ -188,7 +204,7 @@
       <div class="card full-span">
         <ml-state
           title="A destination makes all the difference"
-          description="Create a goal and give your retirement savings a purpose."
+          description="Create a goal and give your savings a purpose."
           icon="target"
           ><button class="button primary" (click)="open()">Create your first goal</button></ml-state
         >
@@ -198,7 +214,7 @@
 }
 @if (editing()) {
   <ml-dialog
-    [title]="selected() ? 'Update your goal' : 'Create a retirement goal'"
+    [title]="selected() ? 'Update your goal' : 'Create a savings goal'"
     (closed)="editing.set(false)"
   >
     @if (formError()) {
@@ -206,11 +222,9 @@
     }
     <form [formGroup]="form" (ngSubmit)="save()" novalidate>
       <label
-        >Goal name<input
-          formControlName="name"
-          maxlength="100"
-          placeholder="Retire with freedom"
-        /><span class="field-error" [hidden]="!invalid('name')"
+        >Goal name<input formControlName="name" maxlength="100" placeholder="Emergency fund" /><span
+          class="field-error"
+          [hidden]="!invalid('name')"
           >Name your goal (up to 100 characters).</span
         ></label
       >
@@ -276,7 +290,7 @@
   <ml-dialog title="Remove this goal?" (closed)="deleting.set(null)"
     ><p>
       This removes <strong>{{ goal.name }}</strong
-      >. Your IRA balances and transactions are unchanged.
+      >. Your account balances and transactions are unchanged.
     </p>
     @if (formError()) {
       <div class="alert error" role="alert">{{ formError() }}</div>
@@ -288,4 +302,97 @@
       </button>
     </div></ml-dialog
   >
+}
+@if (contributionGoal(); as goal) {
+  <ml-dialog [title]="goal.name + ' · savings progress'" (closed)="contributionGoal.set(null)"
+    ><div class="contribution-summary">
+      <span class="label">Saved toward your goal</span
+      ><strong
+        >{{ goal.currentAmount | currency }}
+        <small>of {{ goal.targetAmount | currency }}</small></strong
+      >
+    </div>
+    <p class="field-help">
+      Contributions record money earmarked for this goal. They do not move funds or change bank
+      account balances.
+    </p>
+    @if (contributionError()) {
+      <div class="alert error" role="alert">{{ contributionError() }}</div>
+    }
+    @if (contributionSuccess()) {
+      <div class="alert success" role="status">{{ contributionSuccess() }}</div>
+    }
+    <form [formGroup]="contributionForm" (ngSubmit)="contribute()" novalidate>
+      <div class="form-row">
+        <label
+          >Savings contribution ($)<input
+            type="number"
+            formControlName="amount"
+            min=".01"
+            max="100000000"
+            step=".01" /></label
+        ><label>Contribution date<input type="date" formControlName="date" [max]="today" /></label>
+      </div>
+      <label
+        >Note (optional)<input
+          formControlName="note"
+          maxlength="200"
+          placeholder="Set aside from this month’s paycheck" /></label
+      ><button class="button primary full" [disabled]="saving()">
+        {{ saving() ? 'Recording…' : 'Record savings contribution' }}<ml-icon name="plus" />
+      </button>
+    </form>
+    <h3 class="contribution-history-heading">Contribution history</h3>
+    @if (historyLoading()) {
+      <p role="status" class="muted">Loading savings history…</p>
+    } @else {
+      <div class="contribution-history">
+        @for (item of contributions(); track item.id) {
+          <div class="contribution-history-row">
+            <div>
+              <strong>{{ item.amount | currency }}</strong
+              ><span
+                >{{ item.date | date: 'MMM d, y' }}
+                @if (item.note) {
+                  · {{ item.note }}
+                }
+              </span>
+            </div>
+            @if (confirmingRemoval() === item.id) {
+              <div class="row-actions">
+                <button
+                  class="text-button danger"
+                  [disabled]="saving()"
+                  (click)="removeContribution(item.id)"
+                >
+                  Confirm removal</button
+                ><button
+                  class="icon-button"
+                  (click)="confirmingRemoval.set(null)"
+                  aria-label="Cancel contribution removal"
+                >
+                  <ml-icon name="close" />
+                </button>
+              </div>
+            } @else {
+              <button
+                class="icon-button danger"
+                (click)="confirmingRemoval.set(item.id)"
+                [attr.aria-label]="
+                  'Remove contribution of ' +
+                  (item.amount | currency) +
+                  ' on ' +
+                  (item.date | date: 'MMM d, y')
+                "
+              >
+                <ml-icon name="trash" />
+              </button>
+            }
+          </div>
+        } @empty {
+          <p class="muted">Your recorded savings contributions will appear here.</p>
+        }
+      </div>
+    }
+  </ml-dialog>
 }

@@ -8,7 +8,8 @@ import {
   Validators,
 } from '@angular/forms';
 import { ApiService, errorMessage } from '../core/api.service';
-import { Goal, Projection } from '../core/models';
+import { Goal, GoalContribution, Projection } from '../core/models';
+import { localDate } from '../core/finance.utils';
 import { ChartComponent } from '../shared/chart.component';
 import { DialogComponent } from '../shared/dialog.component';
 import { IconComponent } from '../shared/icon.component';
@@ -35,6 +36,19 @@ export function retirementAgeValidator(control: AbstractControl): ValidationErro
 export class GoalsComponent {
   private readonly api = inject(ApiService);
   private readonly fb = inject(FormBuilder);
+  readonly showCalculator = signal(false);
+  readonly contributionGoal = signal<Goal | null>(null);
+  readonly contributions = signal<GoalContribution[]>([]);
+  readonly historyLoading = signal(false);
+  readonly contributionError = signal('');
+  readonly contributionSuccess = signal('');
+  readonly confirmingRemoval = signal<string | null>(null);
+  readonly today = localDate();
+  readonly contributionForm = this.fb.nonNullable.group({
+    amount: [0, [Validators.required, Validators.min(0.01), Validators.max(100000000)]],
+    date: [localDate(), Validators.required],
+    note: ['', Validators.maxLength(200)],
+  });
   readonly goals = signal<Goal[]>([]);
   readonly projection = signal<Projection | null>(null);
   readonly calculating = signal(false);
@@ -66,7 +80,7 @@ export class GoalsComponent {
   );
   readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(100)]],
-    targetAmount: [1000000, [Validators.required, Validators.min(1), Validators.max(100000000)]],
+    targetAmount: [10000, [Validators.required, Validators.min(1), Validators.max(100000000)]],
     currentAmount: [0, [Validators.required, Validators.min(0), Validators.max(100000000)]],
     targetDate: ['', Validators.required],
     monthlyContribution: [500, [Validators.required, Validators.min(0), Validators.max(100000)]],
@@ -120,11 +134,11 @@ export class GoalsComponent {
     this.selected.set(goal ?? null);
     this.form.reset({
       name: goal?.name ?? '',
-      targetAmount: goal?.targetAmount ?? 1000000,
+      targetAmount: goal?.targetAmount ?? 10000,
       currentAmount: goal?.currentAmount ?? 0,
       targetDate: goal?.targetDate ?? '',
-      monthlyContribution: goal?.monthlyContribution ?? 500,
-      expectedReturn: goal?.expectedReturn ?? 6,
+      monthlyContribution: goal?.monthlyContribution ?? 250,
+      expectedReturn: goal?.expectedReturn ?? 0,
     });
     this.formError.set('');
     this.editing.set(true);
@@ -136,7 +150,7 @@ export class GoalsComponent {
     try {
       await this.api.save('/goals', this.form.getRawValue(), this.selected()?.id);
       this.editing.set(false);
-      this.success.set('Your retirement goal is saved.');
+      this.success.set('Your savings goal is saved.');
       await this.load();
     } catch (error) {
       this.formError.set(errorMessage(error));
@@ -153,6 +167,66 @@ export class GoalsComponent {
       await this.load();
     } catch (error) {
       this.formError.set(errorMessage(error));
+    } finally {
+      this.saving.set(false);
+    }
+  }
+  async openContributions(goal: Goal): Promise<void> {
+    this.contributionGoal.set(goal);
+    this.contributions.set([]);
+    this.contributionError.set('');
+    this.contributionSuccess.set('');
+    this.confirmingRemoval.set(null);
+    this.contributionForm.reset({ amount: 0, date: localDate(), note: '' });
+    await this.loadContributions();
+  }
+  async loadContributions(): Promise<void> {
+    this.historyLoading.set(true);
+    try {
+      this.contributions.set(await this.api.contributions(this.contributionGoal()!.id));
+    } catch (error) {
+      this.contributionError.set(errorMessage(error));
+    } finally {
+      this.historyLoading.set(false);
+    }
+  }
+  private updateGoal(goal: Goal): void {
+    this.goals.update((goals) => goals.map((g) => (g.id === goal.id ? goal : g)));
+    this.contributionGoal.set(goal);
+  }
+  async contribute(): Promise<void> {
+    this.contributionForm.markAllAsTouched();
+    if (this.contributionForm.invalid || this.contributionForm.controls.date.value > this.today) {
+      this.contributionError.set(
+        'Enter a positive amount and a contribution date that is today or earlier.',
+      );
+      return;
+    }
+    this.saving.set(true);
+    this.contributionError.set('');
+    try {
+      this.updateGoal(
+        await this.api.contribute(this.contributionGoal()!.id, this.contributionForm.getRawValue()),
+      );
+      this.contributionSuccess.set('Your savings contribution is recorded.');
+      this.contributionForm.reset({ amount: 0, date: localDate(), note: '' });
+      await this.loadContributions();
+    } catch (error) {
+      this.contributionError.set(errorMessage(error));
+    } finally {
+      this.saving.set(false);
+    }
+  }
+  async removeContribution(id: string): Promise<void> {
+    this.saving.set(true);
+    this.contributionError.set('');
+    try {
+      this.updateGoal(await this.api.removeContribution(this.contributionGoal()!.id, id));
+      this.confirmingRemoval.set(null);
+      this.contributionSuccess.set('Contribution removed and goal progress updated.');
+      await this.loadContributions();
+    } catch (error) {
+      this.contributionError.set(errorMessage(error));
     } finally {
       this.saving.set(false);
     }

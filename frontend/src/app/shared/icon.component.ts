@@ -25,6 +25,12 @@ const paths: Record<string, string> = {
   mail: 'M3 5h18v14H3zm0 0 9 8 9-8',
   lock: 'M6 10h12v11H6zm2 0V7a4 4 0 0 1 8 0v3',
   info: 'M12 11v5m0-9v.1m9 4.9a9 9 0 1 1-18 0 9 9 0 0 1 18 0',
+  budget: 'M3 5h18v14H3zm4 4h5m-5 4h3m5-4h2m-2 4h2',
+  bill: 'M6 3h12v18l-3-2-3 2-3-2-3 2zm3 5h6m-6 4h6',
+  chart: 'M4 3v18h17M8 17v-5m5 5V8m5 9V5',
+  bell: 'M18 8a6 6 0 0 0-12 0v5l-2 3h16l-2-3zm-8 12h4',
+  sparkles: 'm12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5zm7-1v4m-2-2h4',
+  card: 'M3 5h18v14H3zm0 4h18M7 15h4',
 };
 @Component({
   selector: 'ml-icon',

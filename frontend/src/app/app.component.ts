@@ -3,15 +3,17 @@ import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/rou
 import { AuthService } from './core/auth.service';
 import { IconComponent } from './shared/icon.component';
 import { errorMessage } from './core/api.service';
+import { NotificationsComponent } from './shared/notifications.component';
 @Component({
   selector: 'ml-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, NotificationsComponent],
   templateUrl: './app.component.html',
 })
 export class AppComponent {
   readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   readonly mobileOpen = signal(false);
+  readonly moreOpen = signal(false);
   readonly logoutError = signal('');
   constructor() {
     void this.auth.session();

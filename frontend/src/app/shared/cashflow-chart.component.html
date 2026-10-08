@@ -1,0 +1,74 @@
+<div class="cashflow-chart">
+  <div class="cashflow-legend">
+    <span><i class="legend-dot"></i> Income</span
+    ><span><i class="legend-dot coral"></i> Expenses</span>
+  </div>
+  <svg viewBox="0 0 720 190" role="img" [attr.aria-label]="summary()">
+    @for (y of [25, 75, 125, 180]; track y) {
+      <line x1="10" x2="710" [attr.y1]="y" [attr.y2]="y" stroke="#dae5e7" stroke-dasharray="4 7" />
+    }
+    @for (point of points(); track point.month; let i = $index) {
+      <g>
+        <title>
+          {{ point.month }}: income {{ point.income | currency }}, expenses
+          {{ point.expenses | currency }}
+        </title>
+        <rect
+          [attr.x]="x(i)"
+          [attr.y]="180 - height(point.income)"
+          [attr.width]="width()"
+          [attr.height]="height(point.income)"
+          rx="4"
+          fill="#48D1CC"
+          stroke="#147d79"
+          stroke-width="1.5"
+        />
+        <rect
+          [attr.x]="x(i) + width() + 6"
+          [attr.y]="180 - height(point.expenses)"
+          [attr.width]="width()"
+          [attr.height]="height(point.expenses)"
+          rx="4"
+          fill="#EF7A6C"
+          stroke="#a24b40"
+          stroke-width="1.5"
+        />
+      </g>
+    }
+  </svg>
+  <div class="chart-labels cashflow-labels">
+    @for (point of points(); track point.month) {
+      <span>{{ monthLabel(point.month) }}</span>
+    }
+  </div>
+  <details class="chart-data">
+    <summary class="text-link">View chart data</summary>
+    <div class="table-scroll">
+      <table>
+        <caption class="sr-only">
+          {{
+            title()
+          }}
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Month</th>
+            <th scope="col">Income</th>
+            <th scope="col">Expenses</th>
+            <th scope="col">Net cashflow</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (point of points(); track point.month) {
+            <tr>
+              <th scope="row">{{ point.month }}</th>
+              <td>{{ point.income | currency }}</td>
+              <td>{{ point.expenses | currency }}</td>
+              <td>{{ point.cashFlow | currency }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </details>
+</div>

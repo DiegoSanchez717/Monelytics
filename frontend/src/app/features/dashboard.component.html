@@ -4,7 +4,7 @@
     <h1>
       {{ greeting }}, <span>{{ auth.user()?.firstName }}.</span>
     </h1>
-    <p>Here’s the latest picture of your future.</p>
+    <p>Here’s the latest picture of your money.</p>
   </div>
   <a class="button primary" routerLink="/transactions" [queryParams]="{ add: true }"
     ><ml-icon name="plus" /> Add transaction</a
@@ -17,72 +17,78 @@
     <div class="balance-top">
       <div>
         <div class="label">
-          Total retirement balance
-          <span class="info-dot" title="The total balance across all your IRA accounts.">i</span>
+          Total net worth
+          <span class="info-dot" title="Recorded account assets minus credit card debt.">i</span>
         </div>
-        <div class="balance-amount">
-          {{ d.totalBalance | currency: 'USD' : 'symbol' : '1.2-2' }}
+        <div class="balance-amount" [class.negative]="d.totalBalance < 0">
+          {{ d.totalBalance | currency }}
         </div>
         <div class="trend" [class.negative]="d.monthlyChange < 0">
-          <ml-icon name="up" /> {{ d.monthlyChange >= 0 ? '+' : ''
+          <ml-icon name="up" />{{ d.monthlyChange >= 0 ? '+' : ''
           }}{{ d.monthlyChange | number: '1.1-1' }}% this month
           <span class="muted">across your accounts</span>
         </div>
       </div>
       <div class="balance-options">
-        <span class="pill neutral"><span class="tiny-dot"></span> All IRA accounts</span>
-        <div class="period-switch" aria-label="Chart period">
-          <span class="active">6 months</span>
-        </div>
+        <span class="pill neutral"><span class="tiny-dot"></span> All accounts</span>
+        <div class="period-switch"><span class="active">6 months</span></div>
       </div>
     </div>
     @if (d.balanceHistory.length) {
       <ml-chart
         [values]="historyValues()"
         [labels]="historyLabels()"
-        label="Total account balance over the last six months"
+        label="Recorded net worth over the last six months"
       />
     } @else {
-      <div class="inline-empty">Your balance history will take shape as you add activity.</div>
+      <div class="inline-empty">Your balance history takes shape as you add activity.</div>
     }
     <div class="balance-foot">
-      <span><i class="legend-dot"></i> Your retirement savings</span
-      ><span><ml-icon name="shield" /> A clear view of your progress</span>
+      <span><i class="legend-dot"></i> Your recorded balances</span
+      ><span><ml-icon name="shield" /> Your data. Your perspective.</span>
     </div>
   </section>
-  <section class="stats-grid" aria-label="Financial summary">
+  <div class="month-toolbar dashboard-month">
+    <span class="label"
+      >Monthly picture · <strong>{{ monthLabel(month()) }}</strong></span
+    ><label class="month-select"
+      >Summary month<input type="month" [value]="month()" (change)="changeMonth($event)"
+    /></label>
+  </div>
+  <section class="stats-grid finance-stats" aria-label="Monthly financial summary">
     <article class="card stat-card">
       <div class="stat-head">
-        <span class="label">Contributed this year</span
+        <span class="label">Income this month</span
+        ><span class="circle-icon teal"><ml-icon name="plus" /></span>
+      </div>
+      <strong>{{ d.income | currency: 'USD' : 'symbol' : '1.0-0' }}</strong
+      ><span class="stat-sub">The money coming in.</span>
+    </article>
+    <article class="card stat-card">
+      <div class="stat-head">
+        <span class="label">Expenses this month</span
+        ><span class="circle-icon coral"><ml-icon name="card" /></span>
+      </div>
+      <strong>{{ d.expenses | currency: 'USD' : 'symbol' : '1.0-0' }}</strong
+      ><span class="stat-sub">The everyday and everything else.</span>
+    </article>
+    <article class="card stat-card">
+      <div class="stat-head">
+        <span class="label">Net cashflow</span
         ><span class="circle-icon teal"><ml-icon name="arrows" /></span>
       </div>
-      <strong>{{ d.annualContributions | currency: 'USD' : 'symbol' : '1.0-0' }}</strong
-      ><span class="stat-sub">Consistent steps. Meaningful progress.</span>
+      <strong [class.negative]="d.cashFlow < 0">{{
+        d.cashFlow | currency: 'USD' : 'symbol' : '1.0-0'
+      }}</strong
+      ><span class="stat-sub">Income minus recorded expenses.</span>
     </article>
     <article class="card stat-card">
       <div class="stat-head">
-        <span class="label">IRA contribution tracker</span
-        ><span class="circle-icon coral"><ml-icon name="wallet" /></span>
+        <span class="label">Savings rate</span
+        ><span class="circle-icon gold"><ml-icon name="leaf" /></span>
       </div>
-      <strong
-        >{{ remaining() | currency: 'USD' : 'symbol' : '1.0-0' }} <small>remaining</small></strong
-      >
-      <div class="progress-track">
-        <span [style.width.%]="contributionPercent()"></span>
-      </div>
-      <span class="stat-sub"
-        >{{ contributionPercent() | number: '1.0-0' }}% of your
-        {{ d.contributionLimit | currency: 'USD' : 'symbol' : '1.0-0' }}
-        planning limit</span
-      >
-    </article>
-    <article class="card stat-card">
-      <div class="stat-head">
-        <span class="label">Retirement goal progress</span
-        ><span class="circle-icon gold"><ml-icon name="target" /></span>
-      </div>
-      <strong>{{ d.goalProgress | number: '1.0-0' }}<small>% of the way</small></strong
-      ><span class="stat-sub">A future worth working toward.</span>
+      <strong>{{ d.savingsRate | number: '1.0-1' }}<small>% of income</small></strong
+      ><span class="stat-sub">Cashflow with a little context.</span>
     </article>
   </section>
   <div class="dashboard-grid">
@@ -90,41 +96,51 @@
       <section class="card section-card">
         <div class="card-heading">
           <div>
+            <span class="eyebrow">THE FLOW OF YOUR MONEY</span>
+            <h2>Income & expenses</h2>
+          </div>
+          <a routerLink="/reports" class="text-link">Explore reports <ml-icon name="arrow" /></a>
+        </div>
+        <ml-cashflow-chart [points]="d.spendingTrends" title="Six-month income and expense trend" />
+      </section>
+      <section class="card section-card">
+        <div class="card-heading">
+          <div>
             <span class="eyebrow">YOUR FOUNDATION</span>
-            <h2>Your IRA accounts</h2>
+            <h2>Your accounts</h2>
           </div>
           <a routerLink="/accounts" class="text-link">View accounts <ml-icon name="arrow" /></a>
         </div>
         @if (d.accounts.length) {
-          <div class="ira-preview-grid">
-            @for (account of d.accounts; track account.id) {
+          <div class="ira-preview-grid financial-account-grid">
+            @for (account of d.accounts.slice(0, 3); track account.id) {
               <a routerLink="/accounts" class="ira-preview"
                 ><div class="ira-top">
                   <span
                     class="circle-icon"
-                    [class.coral]="account.type === 'TRADITIONAL_IRA'"
-                    [class.teal]="account.type === 'ROTH_IRA'"
-                    ><ml-icon name="wallet" /></span
-                  ><span class="pill neutral">{{
-                    account.type === 'ROTH_IRA' ? 'Roth IRA' : 'Traditional IRA'
-                  }}</span>
+                    [class.coral]="account.type === 'CREDIT_CARD'"
+                    [class.teal]="account.type !== 'CREDIT_CARD'"
+                    ><ml-icon [name]="account.type === 'CREDIT_CARD' ? 'card' : 'wallet'" /></span
+                  ><span class="pill neutral">{{ accountLabel(account.type) }}</span>
                 </div>
                 <h3>{{ account.name }}</h3>
-                <strong>{{ account.balance | currency }}</strong>
+                <strong [class.negative]="account.balance < 0">{{
+                  account.balance | currency
+                }}</strong>
                 <div class="ira-foot">
-                  <span
-                    >{{
-                      account.annualContributions | currency: 'USD' : 'symbol' : '1.0-0'
-                    }}
-                    contributed this year</span
+                  <span>{{
+                    account.type === 'CREDIT_CARD'
+                      ? 'Debt counts toward net worth'
+                      : 'A home for your money'
+                  }}</span
                   ><ml-icon name="arrow" /></div
               ></a>
             }
           </div>
         } @else {
           <ml-state
-            title="Make room for your future"
-            description="Add your first IRA to start building your financial picture."
+            title="Bring your money into view"
+            description="Add your first checking, savings, or credit card account."
             icon="wallet"
             ><a routerLink="/accounts" class="button secondary">Add an account</a></ml-state
           >
@@ -140,21 +156,20 @@
         </div>
         @if (d.recentTransactions.length) {
           <div class="activity-list">
-            @for (tx of d.recentTransactions.slice(0, 4); track tx.id) {
+            @for (tx of d.recentTransactions.slice(0, 5); track tx.id) {
               <div class="activity-row">
                 <span
                   class="circle-icon"
-                  [class.coral]="tx.type === 'WITHDRAWAL'"
-                  [class.teal]="tx.type !== 'WITHDRAWAL'"
-                  ><ml-icon [name]="tx.type === 'WITHDRAWAL' ? 'arrows' : 'plus'"
+                  [class.coral]="isOutflow(tx.type)"
+                  [class.teal]="!isOutflow(tx.type)"
+                  ><ml-icon [name]="isOutflow(tx.type) ? 'card' : 'plus'"
                 /></span>
                 <div>
                   <strong>{{ tx.description }}</strong
                   ><span>{{ tx.accountName }} · {{ tx.date | date: 'MMM d, y' }}</span>
                 </div>
-                <div class="activity-amount" [class.negative]="tx.type === 'WITHDRAWAL'">
-                  <strong
-                    >{{ tx.type === 'WITHDRAWAL' ? '-' : '+' }}{{ tx.amount | currency }}</strong
+                <div class="activity-amount" [class.negative]="isOutflow(tx.type)">
+                  <strong>{{ isOutflow(tx.type) ? '-' : '+' }}{{ tx.amount | currency }}</strong
                   ><span>{{ transactionLabel(tx.type) }}</span>
                 </div>
               </div>
@@ -163,7 +178,7 @@
         } @else {
           <ml-state
             title="Your story is just beginning"
-            description="Add a contribution to see your account activity here."
+            description="Record income or an expense to see your activity here."
             icon="arrows"
           />
         }
@@ -175,50 +190,109 @@
           <span class="circle-icon"><ml-icon name="leaf" /></span
           ><span class="eyebrow">A LITTLE PERSPECTIVE</span>
         </div>
-        <h2>Your future self <br />will thank you.</h2>
+        <h2>
+          {{ d.cashFlow >= 0 ? 'Make room for what matters.' : 'Find a little breathing room.' }}
+        </h2>
         <p>
-          Small, steady contributions can make a big difference over time. Explore what your next
-          step could look like.
+          {{
+            d.cashFlow >= 0
+              ? 'A thoughtful budget helps you enjoy today while making progress toward tomorrow.'
+              : 'Your recorded spending exceeds income this month. Review your categories and find the adjustments that fit your life.'
+          }}
         </p>
-        <a routerLink="/goals" class="button dark full"
-          >Plan your retirement <ml-icon name="arrow" /></a
+        <a routerLink="/budgets" class="button dark full"
+          >Explore your budgets <ml-icon name="arrow" /></a
         ><span class="insight-decoration" aria-hidden="true">↗</span>
+      </section>
+      <section class="card section-card">
+        <div class="card-heading">
+          <h2>Your spending plan</h2>
+          <ml-icon name="budget" />
+        </div>
+        @for (budget of d.budgets.slice(0, 3); track budget.id) {
+          <div class="budget-preview">
+            <div>
+              <strong>{{ budget.categoryName }}</strong
+              ><span
+                >{{ budget.spentAmount | currency: 'USD' : 'symbol' : '1.0-0' }} of
+                {{ budget.limitAmount | currency: 'USD' : 'symbol' : '1.0-0' }}</span
+              >
+            </div>
+            <div class="progress-track" [class.over-budget]="budget.status === 'OVER_BUDGET'">
+              <span [style.width.%]="budgetPercent(budget)"></span>
+            </div>
+            <span class="stat-sub" [class.negative]="budget.remainingAmount < 0"
+              >{{ budget.percentage | number: '1.0-0' }}% used</span
+            >
+          </div>
+        } @empty {
+          <p class="muted">Give your spending a plan. Create your first category budget.</p>
+        }
+        <a routerLink="/budgets" class="text-link">View budgets <ml-icon name="arrow" /></a>
+      </section>
+      <section class="card section-card">
+        <div class="card-heading">
+          <h2>Coming up next</h2>
+          <ml-icon name="bill" />
+        </div>
+        @for (item of bills(); track item.id) {
+          <a routerLink="/bills" class="upcoming-bill"
+            ><div>
+              <strong>{{ item.name }}</strong
+              ><span
+                >{{ item.nextDueDate | date: 'MMM d' }} ·
+                {{ item.kind === 'BILL' ? 'Bill' : 'Subscription' }}</span
+              >
+            </div>
+            <strong>{{ item.amount | currency }}</strong></a
+          >
+        } @empty {
+          <p class="muted">Add bills and subscriptions to keep due dates in view.</p>
+        }
+        <a routerLink="/bills" class="text-link">Manage recurring items <ml-icon name="arrow" /></a>
       </section>
       <section class="card section-card">
         <div class="card-heading">
           <h2>Your next milestones</h2>
           <ml-icon name="target" />
         </div>
-        @if (goals().length) {
-          @for (goal of goals().slice(0, 2); track goal.id) {
-            <div class="goal-preview">
-              <div>
-                <strong>{{ goal.name }}</strong
-                ><span
-                  >{{ goal.currentAmount | currency: 'USD' : 'symbol' : '1.0-0' }}
-                  <span class="muted"
-                    >of {{ goal.targetAmount | currency: 'USD' : 'symbol' : '1.0-0' }}</span
-                  ></span
-                >
-              </div>
-              <div class="progress-track">
-                <span [style.width.%]="goalPercent(goal)"></span>
-              </div>
-              <span class="stat-sub">Target {{ goal.targetDate | date: 'MMMM y' }}</span>
+        @for (goal of d.goals.slice(0, 2); track goal.id) {
+          <div class="goal-preview">
+            <div>
+              <strong>{{ goal.name }}</strong
+              ><span
+                >{{ goal.currentAmount | currency: 'USD' : 'symbol' : '1.0-0' }}
+                <span class="muted"
+                  >of {{ goal.targetAmount | currency: 'USD' : 'symbol' : '1.0-0' }}</span
+                ></span
+              >
             </div>
-          }
-        } @else {
-          <p class="muted">Give your savings a destination. Create your first retirement goal.</p>
+            <div class="progress-track"><span [style.width.%]="goalPercent(goal)"></span></div>
+            <span class="stat-sub">Target {{ goal.targetDate | date: 'MMMM y' }}</span>
+          </div>
+        } @empty {
+          <p class="muted">A destination makes all the difference. Add a savings goal.</p>
         }
         <a routerLink="/goals" class="text-link">Explore your goals <ml-icon name="arrow" /></a>
       </section>
-      <div class="quiet-note">
-        <ml-icon name="shield" />
-        <p>
-          IRA limits vary by age, income, and tax year. This tracker is for planning; confirm your
-          eligibility before contributing.
-        </p>
-      </div>
     </aside>
+  </div>
+  <section class="card section-card dashboard-breakdown">
+    <div class="card-heading">
+      <div>
+        <span class="eyebrow">SPENDING WITH INTENTION</span>
+        <h2>Where your money went</h2>
+      </div>
+      <a routerLink="/reports" class="text-link">The bigger picture <ml-icon name="arrow" /></a>
+    </div>
+    <ml-category-breakdown [categories]="d.categoryBreakdown" />
+  </section>
+  <div class="quiet-note">
+    <ml-icon name="info" />
+    <p>
+      Net worth uses current recorded balances. Monthly analytics use income and expense records;
+      transfers and IRA activity are excluded from cashflow. Savings goals are tracked separately
+      from account balances.
+    </p>
   </div>
 }

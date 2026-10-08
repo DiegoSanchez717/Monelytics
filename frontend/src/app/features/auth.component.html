@@ -2,10 +2,7 @@
   <div class="auth-story">
     <span class="eyebrow">A FUTURE THAT FEELS LIKE YOU</span>
     <h1>Good things<br />take a <span>little planning.</span></h1>
-    <p>
-      Bring your retirement into focus. One account, one contribution, one meaningful step at a
-      time.
-    </p>
+    <p>Bring your money into focus. One account, one budget, one meaningful step at a time.</p>
     <div class="auth-quote">
       <span class="circle-icon teal"><ml-icon name="leaf" /></span>
       <div>
@@ -116,6 +113,11 @@
           >Please acknowledge before continuing.</span
         >
       }
+      @if (!register) {
+        <div class="auth-forgot">
+          <a routerLink="/forgot-password" class="text-link">Forgot your password?</a>
+        </div>
+      }
       <button type="submit" class="button primary full" [disabled]="busy()">
         @if (busy()) {
           <span class="spinner small"></span>
@@ -136,7 +138,7 @@
         <p>Use the demo account to explore.</p>
         <button type="button" class="text-button" (click)="fillDemo()">
           Fill demo credentials <ml-icon name="arrow" /></button
-        ><span>demo&#64;monelytics.dev · DemoPath!2026</span>
+        ><span>demo&#64;monelytics.dev · Monelytics!2026</span>
       </div>
     }
   </div>

@@ -2,21 +2,29 @@
   <div>
     <span class="eyebrow">EVERY STEP TELLS A STORY</span>
     <h1>Your <span>transactions.</span></h1>
-    <p>Follow the contributions and activity shaping your future.</p>
+    <p>Income, spending, and the moves that keep your money flowing.</p>
   </div>
-  <button class="button primary" (click)="open()" [disabled]="!accounts().length">
-    <ml-icon name="plus" /> Add transaction
-  </button>
+  <div class="heading-actions">
+    <button class="button secondary" [disabled]="exporting()" (click)="exportCsv()">
+      <ml-icon name="download" />{{ exporting() ? 'Exporting…' : 'Export CSV' }}</button
+    ><button class="button primary" (click)="open()" [disabled]="!accounts().length">
+      <ml-icon name="plus" /> Add transaction
+    </button>
+  </div>
 </div>
 @if (success()) {
-  <div class="alert success" role="status"><ml-icon name="check" />{{ success() }}</div>
+  <div class="alert success" role="status">{{ success() }}</div>
+}
+@if (exportError()) {
+  <div class="alert error" role="alert">{{ exportError() }}</div>
 }
 <section class="card section-card">
   <form [formGroup]="filters" (ngSubmit)="filter()" class="filter-form">
     <label class="search-field"
       ><span class="sr-only">Search transactions</span><ml-icon name="search" /><input
         formControlName="search"
-        placeholder="Search your activity…" /></label
+        placeholder="Search your activity…"
+        maxlength="240" /></label
     ><label
       ><span class="sr-only">Account</span
       ><select formControlName="accountId">
@@ -29,6 +37,9 @@
       ><span class="sr-only">Transaction type</span
       ><select formControlName="type">
         <option value="">All activity</option>
+        <option value="INCOME">Income</option>
+        <option value="EXPENSE">Expenses</option>
+        <option value="TRANSFER">Transfers</option>
         <option value="CONTRIBUTION">Contributions</option>
         <option value="WITHDRAWAL">Withdrawals</option>
         <option value="ROLLOVER">Rollovers</option>
@@ -40,7 +51,14 @@
     </button>
     @if (advanced()) {
       <div class="advanced-filters">
-        <label>From date<input type="date" formControlName="from" /></label
+        <label
+          >Category<select formControlName="categoryId">
+            <option value="">All categories</option>
+            @for (category of categories(); track category.id) {
+              <option [value]="category.id">{{ category.name }}</option>
+            }
+          </select></label
+        ><label>From date<input type="date" formControlName="from" /></label
         ><label>To date<input type="date" formControlName="to" /></label
         ><button type="button" class="text-button" (click)="resetFilters()">Clear filters</button>
       </div>
@@ -50,15 +68,15 @@
     <div class="alert error" role="alert">{{ filterError() }}</div>
   }
   @if (loading() || error()) {
-    <ml-state [loading]="loading()" [error]="error()" (retry)="load()" />
+    <ml-state [loading]="loading()" [error]="error()" (retry)="initialize()" />
   } @else if (pageData(); as data) {
     <div class="table-meta">
       <span
         ><strong>{{ data.totalElements }}</strong>
         {{ data.totalElements === 1 ? 'transaction' : 'transactions' }}</span
+      ><a routerLink="/categories" class="text-link">Manage categories</a
       ><label class="sort-select"
-        >Sort by
-        <select [value]="sort()" (change)="changeSort($event)">
+        >Sort by<select [value]="sort()" (change)="changeSort($event)">
           <option value="date,desc">Newest first</option>
           <option value="date,asc">Oldest first</option>
           <option value="amount,desc">Amount: high to low</option>
@@ -74,6 +92,7 @@
             <tr>
               <th scope="col">Transaction</th>
               <th scope="col">Account</th>
+              <th scope="col">Category</th>
               <th scope="col">Date</th>
               <th scope="col">Type</th>
               <th scope="col" class="align-right">Amount</th>
@@ -87,24 +106,33 @@
                   <div class="table-description">
                     <span
                       class="circle-icon"
-                      [class.coral]="tx.type === 'WITHDRAWAL'"
-                      [class.teal]="tx.type !== 'WITHDRAWAL'"
-                      ><ml-icon [name]="tx.type === 'WITHDRAWAL' ? 'arrows' : 'plus'" /></span
+                      [class.coral]="isOutflow(tx.type)"
+                      [class.teal]="!isOutflow(tx.type)"
+                      ><ml-icon
+                        [name]="
+                          tx.type === 'TRANSFER' ? 'arrows' : isOutflow(tx.type) ? 'card' : 'plus'
+                        " /></span
                     ><strong>{{ tx.description }}</strong>
                   </div>
                 </td>
-                <td>{{ tx.accountName }}</td>
+                <td>
+                  {{ tx.accountName }}
+                  @if (tx.destinationAccountName) {
+                    <span class="transfer-destination">to {{ tx.destinationAccountName }}</span>
+                  }
+                </td>
+                <td>{{ tx.categoryName || 'Uncategorized' }}</td>
                 <td class="nowrap">{{ tx.date | date: 'MMM d, y' }}</td>
                 <td>
                   <span
                     class="pill"
-                    [class.coral]="tx.type === 'WITHDRAWAL'"
-                    [class.teal]="tx.type !== 'WITHDRAWAL'"
+                    [class.coral]="isOutflow(tx.type)"
+                    [class.teal]="!isOutflow(tx.type)"
                     >{{ label(tx.type) }}</span
                   >
                 </td>
-                <td class="align-right money" [class.negative]="tx.type === 'WITHDRAWAL'">
-                  {{ tx.type === 'WITHDRAWAL' ? '-' : '+' }}{{ tx.amount | currency }}
+                <td class="align-right money" [class.negative]="isOutflow(tx.type)">
+                  {{ isOutflow(tx.type) ? '-' : '+' }}{{ tx.amount | currency }}
                 </td>
                 <td>
                   <div class="row-actions">
@@ -153,7 +181,7 @@
         icon="arrows"
       >
         @if (!accounts().length) {
-          <a routerLink="/accounts" class="button primary">Add an IRA account first</a>
+          <a routerLink="/accounts" class="button primary">Add an account first</a>
         } @else {
           <button class="button secondary" (click)="resetFilters()">Clear filters</button>
         }
@@ -162,8 +190,8 @@
   }
 </section>
 <p class="financial-note">
-  Transactions are records for planning purposes. Monelytics does not move funds between financial
-  institutions.
+  Transfers move recorded balances between your accounts and are excluded from income and expense
+  totals. CSV exports include all matching records, beyond the current page.
 </p>
 @if (editing()) {
   <ml-dialog
@@ -174,21 +202,24 @@
       <div class="alert error" role="alert">{{ formError() }}</div>
     }
     <form [formGroup]="form" (ngSubmit)="save()" novalidate>
-      <label
-        >IRA account<select formControlName="accountId">
-          <option [ngValue]="''" disabled>Select an account</option>
-          @for (a of accounts(); track a.id) {
-            <option [ngValue]="a.id">{{ a.name }}</option>
-          }</select
-        ><span class="field-error" [hidden]="!invalid('accountId')">Choose an account.</span></label
-      >
-      <div class="form-row">
+      <label for="tx-account">Account</label
+      ><select id="tx-account" formControlName="accountId">
+        @for (a of accounts(); track a.id) {
+          <option [value]="a.id">{{ a.name }}</option>
+        }
+      </select>
+      <div class="form-row spaced-form-row">
         <label
           >Activity type<select formControlName="type">
-            <option value="CONTRIBUTION">Contribution</option>
-            <option value="WITHDRAWAL">Withdrawal</option>
-            <option value="ROLLOVER">Rollover</option>
-            <option value="RETURN">Investment return</option>
+            <option value="EXPENSE">Expense</option>
+            <option value="INCOME">Income</option>
+            <option value="TRANSFER">Transfer</option>
+            <optgroup label="IRA activity">
+              <option value="CONTRIBUTION">Contribution</option>
+              <option value="WITHDRAWAL">Withdrawal</option>
+              <option value="ROLLOVER">Rollover</option>
+              <option value="RETURN">Investment return</option>
+            </optgroup>
           </select></label
         ><label
           >Amount ($)<input
@@ -197,31 +228,56 @@
             min=".01"
             max="10000000"
             step=".01"
-          /><span class="field-error" [hidden]="!invalid('amount')"
-            >Enter a positive amount up to $10 million.</span
-          ></label
-        >
+        /></label>
       </div>
-      <label
-        >Description<input
-          formControlName="description"
-          maxlength="200"
-          placeholder="Monthly retirement contribution"
-        /><span class="field-error" [hidden]="!invalid('description')"
-          >Enter a description (up to 200 characters).</span
-        ></label
-      ><label
-        >Transaction date<input type="date" formControlName="date" [max]="today" /><span
-          class="field-error"
-          [hidden]="!invalid('date')"
-          >Choose a transaction date.</span
-        ></label
-      >
+      @if (form.controls.type.value === 'TRANSFER') {
+        <label
+          >Destination account<select formControlName="destinationAccountId">
+            <option value="" disabled>Choose a different account</option>
+            @for (a of accounts(); track a.id) {
+              @if (a.id !== form.controls.accountId.value) {
+                <option [value]="a.id">{{ a.name }}</option>
+              }
+            }
+          </select></label
+        >
+      } @else if (form.controls.type.value === 'INCOME' || form.controls.type.value === 'EXPENSE') {
+        <label
+          >Category<select formControlName="categoryId">
+            <option value="">Uncategorized</option>
+            @for (category of formCategories(); track category.id) {
+              <option [value]="category.id">{{ category.name }}</option>
+            }
+          </select></label
+        >
+      }
+      <label for="tx-description">Description</label
+      ><input
+        id="tx-description"
+        formControlName="description"
+        maxlength="200"
+        placeholder="Groceries, payday, weekend plans…"
+        [attr.aria-invalid]="invalid('description')"
+        aria-describedby="tx-description-error"
+      />
+      @if (invalid('description')) {
+        <p id="tx-description-error" class="field-error">
+          Enter a description with up to 200 characters.
+        </p>
+      }
+      <label class="spaced-label"
+        >Transaction date<input type="date" formControlName="date" [max]="today"
+      /></label>
+      @if (form.invalid && form.touched) {
+        <p class="field-error" role="alert">
+          Choose an account, a positive amount, a description, and a date.
+        </p>
+      }
       <div class="form-note">
         <ml-icon name="info" />
         <p>
-          Contributions, rollovers and returns increase the balance. Withdrawals decrease it.
-          Editing a transaction updates the account balance automatically.
+          Monelytics records activity you already made. This updates recorded balances; it does not
+          initiate a real payment or transfer.
         </p>
       </div>
       <div class="dialog-actions">
@@ -236,8 +292,8 @@
 @if (deleting(); as tx) {
   <ml-dialog title="Remove this transaction?" (closed)="deleting.set(null)"
     ><p>
-      This removes <strong>{{ tx.description }}</strong> and reverses its effect on your account
-      balance.
+      This removes <strong>{{ tx.description }}</strong> and reverses its effect on the affected
+      account balances.
     </p>
     @if (formError()) {
       <div class="alert error" role="alert">{{ formError() }}</div>

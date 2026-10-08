@@ -1,0 +1,166 @@
+<div class="page-heading">
+  <div>
+    <span class="eyebrow">MAKE ROOM FOR WHAT MATTERS</span>
+    <h1>A little plan. <span>A lot of freedom.</span></h1>
+    <p>Give every spending category a thoughtful monthly limit.</p>
+  </div>
+  <button class="button primary" (click)="open()"><ml-icon name="plus" /> Create budget</button>
+</div>
+@if (success()) {
+  <div class="alert success" role="status">{{ success() }}</div>
+}
+<div class="month-toolbar">
+  <span class="label"
+    >Your plan for <strong>{{ monthLabel(month()) }}</strong></span
+  ><label class="month-select"
+    >Budget month<input type="month" [value]="month()" (change)="changeMonth($event)"
+  /></label>
+</div>
+@if (loading() || error()) {
+  <ml-state [loading]="loading()" [error]="error()" (retry)="initialize()" />
+} @else {
+  <section class="stats-grid">
+    <article class="card stat-card">
+      <span class="label">Planned spending</span><strong>{{ totalLimit() | currency }}</strong
+      ><span class="stat-sub">{{
+        overall() ? 'Overall monthly limit' : 'Across your category budgets'
+      }}</span>
+    </article>
+    <article class="card stat-card">
+      <span class="label">Spent this month</span><strong>{{ totalSpent() | currency }}</strong
+      ><span class="stat-sub">{{
+        overall() ? 'All recorded expenses' : 'Expenses covered by category budgets'
+      }}</span>
+    </article>
+    <article class="card stat-card">
+      <span class="label">Budget room</span
+      ><strong [class.negative]="remaining() < 0">{{ remaining() | currency }}</strong
+      ><span class="stat-sub">{{
+        remaining() < 0 ? 'Time to revisit your plan.' : 'Room to spend with intention.'
+      }}</span>
+    </article>
+  </section>
+  <section class="budgets-grid">
+    @for (budget of budgets(); track budget.id) {
+      <article class="card budget-card">
+        <div class="card-heading">
+          <span class="circle-icon teal"><ml-icon name="budget" /></span
+          ><span
+            class="pill"
+            [class.teal]="budget.status === 'ON_TRACK'"
+            [class.coral]="budget.status !== 'ON_TRACK'"
+            >{{ status(budget) }}</span
+          >
+        </div>
+        <h2>{{ budget.categoryName }}</h2>
+        <div class="budget-money">
+          <strong>{{ budget.spentAmount | currency }}</strong
+          ><span>of {{ budget.limitAmount | currency }} planned</span>
+        </div>
+        <div
+          class="progress-track"
+          [class.over-budget]="budget.status === 'OVER_BUDGET'"
+          role="progressbar"
+          [attr.aria-label]="budget.categoryName + ' budget used'"
+          [attr.aria-valuenow]="width(budget)"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          [attr.aria-valuetext]="(budget.percentage | number: '1.0-0') + ' percent used'"
+        >
+          <span [style.width.%]="width(budget)"></span>
+        </div>
+        <div class="budget-foot">
+          <span>{{ budget.percentage | number: '1.0-0' }}% used</span
+          ><strong [class.negative]="budget.remainingAmount < 0"
+            >{{
+              budget.remainingAmount < 0
+                ? (-budget.remainingAmount | currency)
+                : (budget.remainingAmount | currency)
+            }}
+            {{ budget.remainingAmount < 0 ? 'over' : 'left' }}</strong
+          >
+        </div>
+        <div class="account-actions">
+          <button class="button secondary small" (click)="open(budget)">
+            <ml-icon name="edit" /> Edit budget</button
+          ><button
+            class="icon-button danger"
+            (click)="deleting.set(budget); formError.set('')"
+            [attr.aria-label]="'Delete ' + budget.categoryName + ' budget'"
+          >
+            <ml-icon name="trash" />
+          </button>
+        </div>
+      </article>
+    } @empty {
+      <div class="card full-span">
+        <ml-state
+          title="Give your month a little direction"
+          description="Create a category budget to see spending progress and helpful alerts."
+          icon="budget"
+          ><button class="button primary" (click)="open()">
+            Create your first budget
+          </button></ml-state
+        >
+      </div>
+    }
+  </section>
+}
+@if (editing()) {
+  <ml-dialog
+    [title]="selected() ? 'Edit monthly budget' : 'Create a monthly budget'"
+    (closed)="editing.set(false)"
+  >
+    @if (formError()) {
+      <div class="alert error" role="alert">{{ formError() }}</div>
+    }
+    <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <label
+        >Expense category<select formControlName="categoryId">
+          <option value="">Overall monthly budget</option>
+          @for (category of categories(); track category.id) {
+            <option [value]="category.id">{{ category.name }}</option>
+          }
+        </select></label
+      >
+      <div class="form-row">
+        <label>Month<input type="month" formControlName="month" /></label
+        ><label
+          >Budget amount ($)<input
+            type="number"
+            formControlName="limitAmount"
+            min=".01"
+            max="10000000"
+            step=".01"
+        /></label>
+      </div>
+      <p class="field-help">
+        An overall budget covers all expenses. Category budgets track individual areas. Summary
+        totals use your overall budget when one exists.
+      </p>
+      <div class="dialog-actions">
+        <button type="button" class="button secondary" (click)="editing.set(false)">Cancel</button
+        ><button class="button primary" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : 'Save budget' }}
+        </button>
+      </div>
+    </form>
+  </ml-dialog>
+}
+@if (deleting(); as budget) {
+  <ml-dialog title="Remove this budget?" (closed)="deleting.set(null)"
+    ><p>
+      Remove the <strong>{{ budget.categoryName }}</strong> budget for
+      {{ monthLabel(budget.month) }}. Recorded transactions remain in your history.
+    </p>
+    @if (formError()) {
+      <div class="alert error" role="alert">{{ formError() }}</div>
+    }
+    <div class="dialog-actions">
+      <button class="button secondary" (click)="deleting.set(null)">Keep budget</button
+      ><button class="button danger-button" [disabled]="saving()" (click)="remove()">
+        {{ saving() ? 'Removing…' : 'Remove budget' }}
+      </button>
+    </div></ml-dialog
+  >
+}

@@ -4,7 +4,21 @@ export const routes: Routes = [
   {
     path: '',
     loadComponent: () => import('./features/landing.component').then((m) => m.LandingComponent),
-    title: 'Monelytics · A clearer path to retirement',
+    title: 'Monelytics · A clearer picture of your money',
+  },
+  {
+    path: 'forgot-password',
+    loadComponent: () =>
+      import('./features/password-reset.component').then((m) => m.PasswordResetComponent),
+    data: { mode: 'request' },
+    title: 'Reset your password · Monelytics',
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () =>
+      import('./features/password-reset.component').then((m) => m.PasswordResetComponent),
+    data: { mode: 'confirm' },
+    title: 'Choose a new password · Monelytics',
   },
   {
     path: 'login',
@@ -26,7 +40,7 @@ export const routes: Routes = [
     path: 'accounts',
     canActivate: [authGuard],
     loadComponent: () => import('./features/accounts.component').then((m) => m.AccountsComponent),
-    title: 'IRA accounts · Monelytics',
+    title: 'Accounts · Monelytics',
   },
   {
     path: 'transactions',
@@ -39,7 +53,32 @@ export const routes: Routes = [
     path: 'goals',
     canActivate: [authGuard],
     loadComponent: () => import('./features/goals.component').then((m) => m.GoalsComponent),
-    title: 'Retirement goals · Monelytics',
+    title: 'Savings goals · Monelytics',
+  },
+  {
+    path: 'budgets',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/budgets.component').then((m) => m.BudgetsComponent),
+    title: 'Budgets · Monelytics',
+  },
+  {
+    path: 'bills',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/bills.component').then((m) => m.BillsComponent),
+    title: 'Bills & subscriptions · Monelytics',
+  },
+  {
+    path: 'categories',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/categories.component').then((m) => m.CategoriesComponent),
+    title: 'Categories · Monelytics',
+  },
+  {
+    path: 'reports',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/reports.component').then((m) => m.ReportsComponent),
+    title: 'Reports · Monelytics',
   },
   {
     path: 'settings',

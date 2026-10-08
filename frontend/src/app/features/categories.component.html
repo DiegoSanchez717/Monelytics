@@ -1,0 +1,126 @@
+<div class="page-heading">
+  <div>
+    <span class="eyebrow">A PLACE FOR EVERYTHING</span>
+    <h1>Your money, <span>organized.</span></h1>
+    <p>Personalize the categories behind your transactions and budgets.</p>
+  </div>
+  <button class="button primary" (click)="open()"><ml-icon name="plus" /> Add category</button>
+</div>
+@if (success()) {
+  <div class="alert success" role="status">{{ success() }}</div>
+}
+@if (loading() || error()) {
+  <ml-state [loading]="loading()" [error]="error()" (retry)="load()" />
+} @else {
+  <section class="card section-card">
+    <div class="card-heading">
+      <h2>Income & expense categories</h2>
+      <span class="pill neutral">{{ categories().length }} categories</span>
+    </div>
+    <div class="category-grid">
+      @for (category of categories(); track category.id) {
+        <article class="category-card">
+          <span
+            class="category-swatch"
+            [style.background]="category.color"
+            aria-hidden="true"
+          ></span>
+          <div>
+            <h3>{{ category.name }}</h3>
+            <span
+              class="pill"
+              [class.teal]="category.type === 'INCOME'"
+              [class.coral]="category.type === 'EXPENSE'"
+              >{{ category.type === 'INCOME' ? 'Income' : 'Expense' }}</span
+            >
+          </div>
+          <div class="row-actions">
+            <button
+              class="icon-button"
+              (click)="open(category)"
+              [attr.aria-label]="'Edit ' + category.name"
+            >
+              <ml-icon name="edit" /></button
+            ><button
+              class="icon-button danger"
+              (click)="deleting.set(category); formError.set('')"
+              [attr.aria-label]="'Delete ' + category.name"
+            >
+              <ml-icon name="trash" />
+            </button>
+          </div>
+        </article>
+      } @empty {
+        <ml-state
+          title="Make it personal"
+          description="Create income and expense categories to organize activity your way."
+          icon="budget"
+          ><button class="button primary" (click)="open()">
+            Add your first category
+          </button></ml-state
+        >
+      }
+    </div>
+  </section>
+}
+@if (editing()) {
+  <ml-dialog
+    [title]="selected() ? 'Edit category' : 'Add a category'"
+    (closed)="editing.set(false)"
+  >
+    @if (formError()) {
+      <div class="alert error" role="alert">{{ formError() }}</div>
+    }
+    <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <label for="category-name">Category name</label
+      ><input
+        id="category-name"
+        formControlName="name"
+        placeholder="Groceries, salary, travel…"
+        maxlength="80"
+        aria-describedby="category-name-error"
+      />
+      @if (form.controls.name.invalid && form.controls.name.touched) {
+        <p id="category-name-error" class="field-error">
+          Enter a category name with up to 80 characters.
+        </p>
+      }
+      <div class="form-row category-form-row">
+        <label
+          >Category type<select formControlName="type">
+            <option value="EXPENSE">Expense</option>
+            <option value="INCOME">Income</option>
+          </select></label
+        ><label
+          >Category color<input type="color" formControlName="color" class="color-input"
+        /></label>
+      </div>
+      <p class="field-help">
+        Colors are visual cues. Category names always identify your activity.
+      </p>
+      <div class="dialog-actions">
+        <button type="button" class="button secondary" (click)="editing.set(false)">Cancel</button
+        ><button class="button primary" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : 'Save category' }}
+        </button>
+      </div>
+    </form></ml-dialog
+  >
+}
+@if (deleting(); as category) {
+  <ml-dialog title="Remove this category?" (closed)="deleting.set(null)"
+    ><p>
+      Remove <strong>{{ category.name }}</strong> from your category list. Existing references may
+      need to be reassigned first.
+    </p>
+    @if (formError()) {
+      <div class="alert error" role="alert">{{ formError() }}</div>
+    }
+    <div class="dialog-actions">
+      <button class="button secondary" (click)="deleting.set(null)">Keep category</button
+      ><button class="button danger-button" [disabled]="saving()" (click)="remove()">
+        {{ saving() ? 'Removing…' : 'Remove category' }}
+      </button>
+    </div></ml-dialog
+  >
+}

@@ -14,29 +14,54 @@
       ><span>Monelytics</span></a
     >
     @if (auth.user()) {
-      <nav class="main-nav" [class.open]="mobileOpen()" aria-label="Main navigation">
+      <nav class="main-nav finance-nav" [class.open]="mobileOpen()" aria-label="Main navigation">
         <a routerLink="/dashboard" routerLinkActive="active" (click)="mobileOpen.set(false)"
           >Overview</a
-        ><a routerLink="/accounts" routerLinkActive="active" (click)="mobileOpen.set(false)"
-          >Accounts</a
         ><a routerLink="/transactions" routerLinkActive="active" (click)="mobileOpen.set(false)"
           >Transactions</a
+        ><a routerLink="/budgets" routerLinkActive="active" (click)="mobileOpen.set(false)"
+          >Budgets</a
+        ><a routerLink="/bills" routerLinkActive="active" (click)="mobileOpen.set(false)">Bills</a
         ><a routerLink="/goals" routerLinkActive="active" (click)="mobileOpen.set(false)">Goals</a>
-        @if (auth.user()?.role === 'ADMIN') {
-          <a routerLink="/admin" routerLinkActive="active" (click)="mobileOpen.set(false)"
-            >Audit log</a
-          >
-        }
+        <details class="nav-more" [open]="moreOpen()">
+          <summary (click)="$event.preventDefault(); moreOpen.set(!moreOpen())">
+            More <ml-icon name="chevron" />
+          </summary>
+          <div class="nav-more-menu">
+            <a
+              routerLink="/accounts"
+              routerLinkActive="active"
+              (click)="mobileOpen.set(false); moreOpen.set(false)"
+              ><ml-icon name="wallet" /> Accounts</a
+            ><a
+              routerLink="/reports"
+              routerLinkActive="active"
+              (click)="mobileOpen.set(false); moreOpen.set(false)"
+              ><ml-icon name="chart" /> Reports</a
+            ><a
+              routerLink="/categories"
+              routerLinkActive="active"
+              (click)="mobileOpen.set(false); moreOpen.set(false)"
+              ><ml-icon name="budget" /> Categories</a
+            ><a
+              routerLink="/settings"
+              routerLinkActive="active"
+              (click)="mobileOpen.set(false); moreOpen.set(false)"
+              ><ml-icon name="settings" /> Settings</a
+            >
+            @if (auth.user()?.role === 'ADMIN') {
+              <a
+                routerLink="/admin"
+                routerLinkActive="active"
+                (click)="mobileOpen.set(false); moreOpen.set(false)"
+                ><ml-icon name="shield" /> Audit log</a
+              >
+            }
+          </div>
+        </details>
       </nav>
       <div class="nav-actions">
-        <a
-          class="icon-button"
-          routerLink="/settings"
-          routerLinkActive="active"
-          aria-label="Settings"
-          ><ml-icon name="settings" /></a
-        ><span class="nav-divider"></span
-        ><a
+        <ml-notifications /><a
           routerLink="/settings"
           class="avatar"
           [attr.aria-label]="'Profile for ' + auth.user()?.firstName"
@@ -45,7 +70,7 @@
           <ml-icon name="logout" /></button
         ><button
           class="icon-button mobile-toggle"
-          (click)="mobileOpen.set(!mobileOpen())"
+          (click)="mobileOpen.set(!mobileOpen()); moreOpen.set(false)"
           [attr.aria-expanded]="mobileOpen()"
           aria-label="Toggle navigation"
         >
@@ -68,7 +93,7 @@
   <main id="main" tabindex="-1"><router-outlet /></main>
   <footer class="footer">
     <span class="footer-brand">Monelytics <span>· A clearer financial future.</span></span
-    ><span>Thoughtfully planned. Confidently ahead.</span
+    ><span>Less guesswork. More possibilities.</span
     ><span class="footer-status"><i></i> Your data. Your control.</span>
   </footer>
 </div>

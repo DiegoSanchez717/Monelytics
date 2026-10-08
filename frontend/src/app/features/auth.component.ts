@@ -45,7 +45,7 @@ export class AuthComponent {
   fillDemo(): void {
     this.form.patchValue({
       email: 'demo@monelytics.dev',
-      password: 'DemoPath!2026',
+      password: 'Monelytics!2026',
     });
   }
   async submit(): Promise<void> {

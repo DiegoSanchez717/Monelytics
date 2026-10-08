@@ -1,7 +1,21 @@
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { Account, AuditEntry, Dashboard, Goal, Page, Projection, Transaction } from './models';
+import {
+  Account,
+  Analytics,
+  AuditEntry,
+  Budget,
+  Category,
+  Dashboard,
+  FinanceNotification,
+  Goal,
+  GoalContribution,
+  Page,
+  Projection,
+  RecurringItem,
+  Transaction,
+} from './models';
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private readonly http = inject(HttpClient);
@@ -23,8 +37,8 @@ export class ApiService {
   remove(path: string, id: string): Promise<void> {
     return firstValueFrom(this.http.delete<void>(`/api${path}/${id}`));
   }
-  dashboard(): Promise<Dashboard> {
-    return this.get<Dashboard>('/dashboard');
+  dashboard(month?: string): Promise<Dashboard> {
+    return this.get<Dashboard>('/dashboard', month ? { month } : undefined);
   }
   accounts(): Promise<Account[]> {
     return this.get<Account[]>('/accounts');
@@ -37,6 +51,41 @@ export class ApiService {
   }
   calculate(value: unknown): Promise<Projection> {
     return this.save<Projection>('/goals/calculate', value);
+  }
+  categories(): Promise<Category[]> {
+    return this.get<Category[]>('/categories');
+  }
+  budgets(month: string): Promise<Budget[]> {
+    return this.get<Budget[]>('/budgets', { month });
+  }
+  recurring(): Promise<RecurringItem[]> {
+    return this.get<RecurringItem[]>('/recurring');
+  }
+  analytics(month: string): Promise<Analytics> {
+    return this.get<Analytics>('/analytics', { month });
+  }
+  notifications(month: string): Promise<FinanceNotification[]> {
+    return this.get<FinanceNotification[]>('/notifications', { month });
+  }
+  contributions(goalId: string): Promise<GoalContribution[]> {
+    return this.get<GoalContribution[]>(`/goals/${goalId}/contributions`);
+  }
+  contribute(goalId: string, value: { amount: number; date: string; note: string }): Promise<Goal> {
+    return this.save<Goal>(`/goals/${goalId}/contributions`, value);
+  }
+  removeContribution(goalId: string, id: string): Promise<Goal> {
+    return firstValueFrom(this.http.delete<Goal>(`/api/goals/${goalId}/contributions/${id}`));
+  }
+  payRecurring(item: RecurringItem, date: string): Promise<Transaction> {
+    return this.save<Transaction>(`/recurring/${item.id}/pay`, { dueDate: item.nextDueDate, date });
+  }
+  exportTransactions(params: Record<string, string | number>): Promise<Blob> {
+    return firstValueFrom(
+      this.http.get('/api/transactions/export.csv', {
+        params: new HttpParams({ fromObject: params }),
+        responseType: 'blob',
+      }),
+    );
   }
   audit(page: number): Promise<Page<AuditEntry>> {
     return this.get<Page<AuditEntry>>('/audit', {

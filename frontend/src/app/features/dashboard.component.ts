@@ -3,8 +3,17 @@ import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ApiService, errorMessage } from '../core/api.service';
 import { AuthService } from '../core/auth.service';
-import { Dashboard, Goal } from '../core/models';
+import {
+  accountLabel,
+  currentMonth,
+  isOutflow,
+  monthLabel,
+  transactionLabel,
+} from '../core/finance.utils';
+import { Budget, Dashboard, Goal, RecurringItem } from '../core/models';
 import { ChartComponent } from '../shared/chart.component';
+import { CashflowChartComponent } from '../shared/cashflow-chart.component';
+import { CategoryBreakdownComponent } from '../shared/category-breakdown.component';
 import { IconComponent } from '../shared/icon.component';
 import { StateComponent } from '../shared/state.component';
 @Component({
@@ -15,6 +24,8 @@ import { StateComponent } from '../shared/state.component';
     DecimalPipe,
     RouterLink,
     ChartComponent,
+    CashflowChartComponent,
+    CategoryBreakdownComponent,
     IconComponent,
     StateComponent,
   ],
@@ -24,7 +35,12 @@ export class DashboardComponent {
   private readonly api = inject(ApiService);
   readonly auth = inject(AuthService);
   readonly data = signal<Dashboard | null>(null);
-  readonly goals = signal<Goal[]>([]);
+  readonly bills = signal<RecurringItem[]>([]);
+  readonly month = signal(currentMonth());
+  readonly monthLabel = monthLabel;
+  readonly accountLabel = accountLabel;
+  readonly transactionLabel = transactionLabel;
+  readonly isOutflow = isOutflow;
   readonly loading = signal(true);
   readonly error = signal('');
   readonly today = new Date();
@@ -41,13 +57,28 @@ export class DashboardComponent {
     this.loading.set(true);
     this.error.set('');
     try {
-      const [data, goals] = await Promise.all([this.api.dashboard(), this.api.goals()]);
+      const [data, bills] = await Promise.all([
+        this.api.dashboard(this.month()),
+        this.api.recurring(),
+      ]);
       this.data.set(data);
-      this.goals.set(goals);
+      this.bills.set(
+        bills
+          .filter((i) => i.active)
+          .sort((a, b) => a.nextDueDate.localeCompare(b.nextDueDate))
+          .slice(0, 3),
+      );
     } catch (error) {
       this.error.set(errorMessage(error));
     } finally {
       this.loading.set(false);
+    }
+  }
+  changeMonth(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    if (value) {
+      this.month.set(value);
+      void this.load();
     }
   }
   historyValues(): number[] {
@@ -56,29 +87,10 @@ export class DashboardComponent {
   historyLabels(): string[] {
     return this.data()?.balanceHistory.map((i) => i.month) ?? [];
   }
-  remaining(): number {
-    return Math.max(
-      0,
-      (this.data()?.contributionLimit ?? 0) - (this.data()?.annualContributions ?? 0),
-    );
-  }
-  contributionPercent(): number {
-    const d = this.data();
-    return d && d.contributionLimit
-      ? Math.min(100, (d.annualContributions / d.contributionLimit) * 100)
-      : 0;
-  }
   goalPercent(goal: Goal): number {
     return Math.min(100, (goal.currentAmount / goal.targetAmount) * 100);
   }
-  transactionLabel(type: string): string {
-    return (
-      {
-        CONTRIBUTION: 'Contribution',
-        WITHDRAWAL: 'Withdrawal',
-        ROLLOVER: 'Rollover',
-        RETURN: 'Investment return',
-      }[type] ?? type
-    );
+  budgetPercent(budget: Budget): number {
+    return Math.max(0, Math.min(100, budget.percentage));
   }
 }

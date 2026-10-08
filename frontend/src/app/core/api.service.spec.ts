@@ -41,6 +41,52 @@ describe('REST communication', () => {
     request.flush({ name: 'Freedom' });
     await promise;
   });
+  it('scopes analytics to the selected month', async () => {
+    const promise = api.analytics('2026-10');
+    const request = http.expectOne((r) => r.url === '/api/analytics');
+    expect(request.request.params.get('month')).toBe('2026-10');
+    request.flush({ month: '2026-10', income: 100, expenses: 30 });
+    expect((await promise).income).toBe(100);
+  });
+  it('exports all matching transactions as a CSV blob with category filters', async () => {
+    const promise = api.exportTransactions({
+      categoryId: 'expense-category',
+      from: '2026-10-01',
+      sort: 'date,asc',
+    });
+    const request = http.expectOne((r) => r.url === '/api/transactions/export.csv');
+    expect(request.request.responseType).toBe('blob');
+    expect(request.request.params.get('categoryId')).toBe('expense-category');
+    expect(request.request.params.has('page')).toBe(false);
+    const csv = new Blob(['description,amount\nGroceries,20'], { type: 'text/csv' });
+    request.flush(csv);
+    expect(await promise).toBe(csv);
+  });
+  it('includes the due-date snapshot so recurring payment retries stay idempotent', async () => {
+    const promise = api.payRecurring(
+      { id: 'bill', nextDueDate: '2026-10-05' } as import('./models').RecurringItem,
+      '2026-10-07',
+    );
+    const request = http.expectOne('/api/recurring/bill/pay');
+    expect(request.request.body).toEqual({ dueDate: '2026-10-05', date: '2026-10-07' });
+    request.flush({ id: 'payment' });
+    await promise;
+  });
+  it('records earmarked savings through the goal endpoint', async () => {
+    const value = { amount: 200, date: '2026-10-07', note: 'Paycheck' };
+    const promise = api.contribute('goal', value);
+    const request = http.expectOne('/api/goals/goal/contributions');
+    expect(request.request.body).toEqual(value);
+    request.flush({ id: 'goal', currentAmount: 200 });
+    expect((await promise).currentAmount).toBe(200);
+  });
+  it('reads the updated goal after a contribution is removed', async () => {
+    const promise = api.removeContribution('goal', 'contribution');
+    const request = http.expectOne('/api/goals/goal/contributions/contribution');
+    expect(request.request.method).toBe('DELETE');
+    request.flush({ id: 'goal', currentAmount: 0 });
+    expect((await promise).currentAmount).toBe(0);
+  });
   it('sends beneficiary changes to the dedicated PUT endpoint', async () => {
     const promise = api.update('/accounts/abc/beneficiaries', {
       beneficiaries: [],

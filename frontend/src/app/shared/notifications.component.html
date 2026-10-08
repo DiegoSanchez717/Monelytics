@@ -1,0 +1,76 @@
+<div class="notification-control">
+  <button
+    #toggle
+    type="button"
+    class="icon-button notification-toggle"
+    (click)="togglePanel()"
+    [attr.aria-expanded]="open()"
+    aria-controls="notification-panel"
+    aria-label="Notifications"
+  >
+    <ml-icon name="bell" />
+    @if (visible().length) {
+      <span class="notification-dot" aria-hidden="true"></span>
+    }
+  </button>
+  @if (open()) {
+    <section
+      id="notification-panel"
+      class="notification-panel card"
+      aria-label="Financial notifications"
+    >
+      <div class="card-heading">
+        <div>
+          <span class="eyebrow">A LITTLE HEADS-UP</span>
+          <h2>Your notifications</h2>
+        </div>
+        <button
+          class="icon-button"
+          (click)="open.set(false); toggle.focus()"
+          aria-label="Close notifications"
+        >
+          <ml-icon name="close" />
+        </button>
+      </div>
+      @if (loading()) {
+        <p role="status">Checking your financial picture…</p>
+      } @else if (error()) {
+        <p class="field-error" role="alert">{{ error() }}</p>
+        <button class="text-button" (click)="load()">Try again</button>
+      } @else {
+        <div class="notification-list">
+          @for (item of visible(); track item.id) {
+            <article class="notification-item">
+              <span
+                class="circle-icon"
+                [class.coral]="item.severity !== 'INFO'"
+                [class.teal]="item.severity === 'INFO'"
+                ><ml-icon
+                  [name]="
+                    item.type === 'BILL' ? 'bill' : item.type === 'BUDGET' ? 'budget' : 'info'
+                  "
+              /></span>
+              <div>
+                <a [routerLink]="route(item)" (click)="open.set(false)"
+                  ><strong>{{ item.title }}</strong>
+                  <p>{{ item.message }}</p></a
+                ><button
+                  class="text-button"
+                  (click)="dismiss(item.id)"
+                  [attr.aria-label]="'Dismiss ' + item.title + ' for this visit'"
+                >
+                  Dismiss for this visit
+                </button>
+              </div>
+            </article>
+          } @empty {
+            <div class="notification-empty">
+              <ml-icon name="check" /><strong>All caught up.</strong>
+              <p>No new budget, bill, or goal alerts this month.</p>
+            </div>
+          }
+        </div>
+      }
+    </section>
+  }
+</div>

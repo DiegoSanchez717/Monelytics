@@ -1,0 +1,228 @@
+<div class="page-heading">
+  <div>
+    <span class="eyebrow">KEEP THE EVERYDAY IN VIEW</span>
+    <h1>Bills, <span>without the surprises.</span></h1>
+    <p>Stay ahead of recurring payments and subscriptions.</p>
+  </div>
+  <button class="button primary" (click)="open()">
+    <ml-icon name="plus" /> Add recurring item
+  </button>
+</div>
+@if (success()) {
+  <div class="alert success" role="status">{{ success() }}</div>
+}
+@if (loading() || error()) {
+  <ml-state [loading]="loading()" [error]="error()" (retry)="initialize()" />
+} @else {
+  <section class="stats-grid">
+    <article class="card stat-card">
+      <span class="label">Monthly recurring equivalent</span
+      ><strong>{{ monthlyCost() | currency }}</strong
+      ><span class="stat-sub">Annual amounts divided by 12</span>
+    </article>
+    <article class="card stat-card">
+      <span class="label">Due within seven days</span><strong>{{ dueSoon() }}</strong
+      ><span class="stat-sub">Including overdue active items</span>
+    </article>
+    <article class="card stat-card">
+      <span class="label">Tracked recurring items</span><strong>{{ items().length }}</strong
+      ><span class="stat-sub">Your routine, in one thoughtful space</span>
+    </article>
+  </section>
+  <section class="card section-card">
+    <div class="card-heading">
+      <h2>Your recurring plan</h2>
+      <label class="sort-select"
+        >Show<select [value]="kind()" (change)="changeKind($event)">
+          <option value="ALL">Bills & subscriptions</option>
+          <option value="BILL">Bills</option>
+          <option value="SUBSCRIPTION">Subscriptions</option>
+        </select></label
+      >
+    </div>
+    <div class="recurring-list">
+      @for (item of filtered(); track item.id) {
+        <article class="recurring-row">
+          <span
+            class="circle-icon"
+            [class.teal]="item.kind === 'BILL'"
+            [class.coral]="item.kind === 'SUBSCRIPTION'"
+            ><ml-icon [name]="item.kind === 'BILL' ? 'bill' : 'card'"
+          /></span>
+          <div class="recurring-name">
+            <h3>{{ item.name }}</h3>
+            <span
+              >{{ item.accountName }} · {{ item.categoryName }} ·
+              {{ item.frequency === 'MONTHLY' ? 'Monthly' : 'Yearly' }}</span
+            >
+          </div>
+          <div class="recurring-date">
+            <strong>{{ item.nextDueDate | date: 'MMM d, y' }}</strong
+            ><span
+              class="pill"
+              [class.coral]="item.active && dueDays(item) <= 7"
+              [class.neutral]="!item.active || dueDays(item) > 7"
+              >{{ status(item) }}</span
+            >
+          </div>
+          <strong class="recurring-amount">{{ item.amount | currency }}</strong>
+          <div class="recurring-actions">
+            <button
+              class="button secondary small"
+              [disabled]="!item.active"
+              (click)="openPayment(item)"
+            >
+              Record payment</button
+            ><button
+              class="icon-button"
+              (click)="open(item)"
+              [attr.aria-label]="'Edit ' + item.name"
+            >
+              <ml-icon name="edit" /></button
+            ><button
+              class="icon-button danger"
+              (click)="deleting.set(item); formError.set('')"
+              [attr.aria-label]="'Delete ' + item.name"
+            >
+              <ml-icon name="trash" />
+            </button>
+          </div>
+        </article>
+      } @empty {
+        <ml-state
+          title="A little less to remember"
+          description="Add your rent, utilities, or subscriptions and keep upcoming dates in view."
+          icon="bill"
+          ><button class="button primary" (click)="open()">
+            Add your first recurring item
+          </button></ml-state
+        >
+      }
+    </div>
+  </section>
+  <p class="financial-note">
+    Payments are records of expenses you already made. Monelytics never schedules a bank debit or
+    sends money.
+  </p>
+}
+@if (editing()) {
+  <ml-dialog
+    [title]="selected() ? 'Edit recurring item' : 'Add a bill or subscription'"
+    (closed)="editing.set(false)"
+  >
+    @if (formError()) {
+      <div class="alert error" role="alert">{{ formError() }}</div>
+    }
+    @if (!accounts().length || !categories().length) {
+      <p class="muted">
+        Add an account and an expense category before setting up recurring payments.
+      </p>
+      <div class="hero-actions">
+        <a routerLink="/accounts" class="button secondary">Accounts</a
+        ><a routerLink="/categories" class="button primary">Categories</a>
+      </div>
+    } @else {
+      <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+        <label
+          >Name<input
+            formControlName="name"
+            maxlength="100"
+            placeholder="Rent, electricity, streaming…"
+        /></label>
+        <div class="form-row">
+          <label
+            >Kind<select formControlName="kind">
+              <option value="BILL">Bill</option>
+              <option value="SUBSCRIPTION">Subscription</option>
+            </select></label
+          ><label
+            >Amount ($)<input
+              type="number"
+              formControlName="amount"
+              min=".01"
+              max="10000000"
+              step=".01"
+          /></label>
+        </div>
+        <div class="form-row">
+          <label
+            >Account<select formControlName="accountId">
+              @for (account of accounts(); track account.id) {
+                <option [value]="account.id">{{ account.name }}</option>
+              }
+            </select></label
+          ><label
+            >Expense category<select formControlName="categoryId">
+              @for (category of categories(); track category.id) {
+                <option [value]="category.id">{{ category.name }}</option>
+              }
+            </select></label
+          >
+        </div>
+        <div class="form-row">
+          <label
+            >Frequency<select formControlName="frequency">
+              <option value="MONTHLY">Monthly</option>
+              <option value="YEARLY">Yearly</option>
+            </select></label
+          ><label>Next due date<input type="date" formControlName="nextDueDate" /></label>
+        </div>
+        <label class="checkbox-label"
+          ><input type="checkbox" formControlName="active" /><span
+            >Active: include this item in reminders and upcoming bills.</span
+          ></label
+        >
+        <div class="dialog-actions">
+          <button type="button" class="button secondary" (click)="editing.set(false)">Cancel</button
+          ><button class="button primary" [disabled]="saving()">
+            {{ saving() ? 'Saving…' : 'Save recurring item' }}
+          </button>
+        </div>
+      </form>
+    }
+  </ml-dialog>
+}
+@if (paying(); as item) {
+  <ml-dialog title="Record a payment" (closed)="paying.set(null)"
+    ><p>
+      Record <strong>{{ item.amount | currency }}</strong> for <strong>{{ item.name }}</strong
+      >, due {{ item.nextDueDate | date: 'MMM d, y' }}.
+    </p>
+    <div class="form-note">
+      <ml-icon name="info" />
+      <p>
+        This creates one expense in {{ item.accountName }} and advances the next due date. Repeated
+        requests for this due date do not create duplicate payments.
+      </p>
+    </div>
+    @if (formError()) {
+      <div class="alert error" role="alert">{{ formError() }}</div>
+    }
+    <form [formGroup]="payment" (ngSubmit)="pay()" novalidate>
+      <label>Payment date<input type="date" formControlName="date" [max]="today" /></label>
+      <div class="dialog-actions">
+        <button type="button" class="button secondary" (click)="paying.set(null)">Cancel</button
+        ><button class="button primary" [disabled]="saving()">
+          {{ saving() ? 'Recording…' : 'Record payment' }}
+        </button>
+      </div>
+    </form></ml-dialog
+  >
+}
+@if (deleting(); as item) {
+  <ml-dialog title="Remove this recurring item?" (closed)="deleting.set(null)"
+    ><p>
+      Remove <strong>{{ item.name }}</strong> from your plan. Previously recorded payments remain in
+      your transaction history.
+    </p>
+    @if (formError()) {
+      <div class="alert error" role="alert">{{ formError() }}</div>
+    }
+    <div class="dialog-actions">
+      <button class="button secondary" (click)="deleting.set(null)">Keep item</button
+      ><button class="button danger-button" [disabled]="saving()" (click)="remove()">
+        {{ saving() ? 'Removing…' : 'Remove item' }}
+      </button>
+    </div></ml-dialog
+  >
+}

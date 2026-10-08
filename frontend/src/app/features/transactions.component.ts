@@ -4,6 +4,9 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ApiService, errorMessage } from '../core/api.service';
 import { Account, Page, Transaction } from '../core/models';
+import { Category, TransactionType } from '../core/models';
+import { isOutflow, transactionLabel } from '../core/finance.utils';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DialogComponent } from '../shared/dialog.component';
 import { IconComponent } from '../shared/icon.component';
 import { StateComponent } from '../shared/state.component';
@@ -21,6 +24,11 @@ import { StateComponent } from '../shared/state.component';
   templateUrl: './transactions.component.html',
 })
 export class TransactionsComponent {
+  readonly isOutflow = isOutflow;
+  readonly transactionLabel = transactionLabel;
+  readonly categories = signal<Category[]>([]);
+  readonly exporting = signal(false);
+  readonly exportError = signal('');
   private readonly api = inject(ApiService);
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
@@ -43,17 +51,24 @@ export class TransactionsComponent {
     search: [''],
     accountId: [''],
     type: [''],
+    categoryId: [''],
     from: [''],
     to: [''],
   });
   readonly form = this.fb.nonNullable.group({
     accountId: ['', Validators.required],
-    type: ['CONTRIBUTION'],
+    type: ['EXPENSE'],
+    categoryId: [''],
+    destinationAccountId: [''],
     amount: [0, [Validators.required, Validators.min(0.01), Validators.max(10000000)]],
     description: ['', [Validators.required, Validators.maxLength(200)]],
     date: [this.localDate(), Validators.required],
   });
   constructor() {
+    this.form.controls.type.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
+      this.form.controls.categoryId.setValue('');
+      this.form.controls.destinationAccountId.setValue('');
+    });
     void this.initialize();
   }
   private localDate(): string {
@@ -62,7 +77,12 @@ export class TransactionsComponent {
   }
   async initialize(): Promise<void> {
     try {
-      this.accounts.set(await this.api.accounts());
+      const [accounts, categories] = await Promise.all([
+        this.api.accounts(),
+        this.api.categories(),
+      ]);
+      this.accounts.set(accounts);
+      this.categories.set(categories);
       await this.load();
       if (this.route.snapshot.queryParamMap.has('add') && this.accounts().length) this.open();
     } catch (error) {
@@ -113,14 +133,10 @@ export class TransactionsComponent {
     void this.load();
   }
   label(type: string): string {
-    return (
-      {
-        CONTRIBUTION: 'Contribution',
-        WITHDRAWAL: 'Withdrawal',
-        ROLLOVER: 'Rollover',
-        RETURN: 'Return',
-      }[type] ?? type
-    );
+    return transactionLabel(type as TransactionType);
+  }
+  formCategories(): Category[] {
+    return this.categories().filter((c) => c.type === this.form.controls.type.value);
   }
   invalid(name: 'accountId' | 'amount' | 'description' | 'date'): boolean {
     return this.form.controls[name].invalid && this.form.controls[name].touched;
@@ -129,7 +145,9 @@ export class TransactionsComponent {
     this.selected.set(tx ?? null);
     this.form.reset({
       accountId: tx?.accountId ?? this.accounts()[0]?.id ?? '',
-      type: tx?.type ?? 'CONTRIBUTION',
+      type: tx?.type ?? 'EXPENSE',
+      categoryId: tx?.categoryId ?? '',
+      destinationAccountId: tx?.destinationAccountId ?? '',
       amount: tx?.amount ?? 0,
       description: tx?.description ?? '',
       date: tx?.date ?? this.localDate(),
@@ -140,9 +158,35 @@ export class TransactionsComponent {
   async save(): Promise<void> {
     this.form.markAllAsTouched();
     if (this.form.invalid) return;
+    const value = this.form.getRawValue();
+    if (value.date > this.today) {
+      this.formError.set('Choose a transaction date that is today or earlier.');
+      return;
+    }
+    if (
+      value.type === 'TRANSFER' &&
+      (!value.destinationAccountId || value.destinationAccountId === value.accountId)
+    ) {
+      this.formError.set('Choose a different destination account for this transfer.');
+      return;
+    }
+    if (value.categoryId && !this.formCategories().some((c) => c.id === value.categoryId)) {
+      this.formError.set(
+        'Choose a category that matches this transaction type, or select Uncategorized.',
+      );
+      return;
+    }
     this.saving.set(true);
     try {
-      await this.api.save('/transactions', this.form.getRawValue(), this.selected()?.id);
+      await this.api.save(
+        '/transactions',
+        {
+          ...value,
+          categoryId: value.categoryId || null,
+          destinationAccountId: value.type === 'TRANSFER' ? value.destinationAccountId : null,
+        },
+        this.selected()?.id,
+      );
       this.editing.set(false);
       this.success.set('Your transaction is saved and the account balance is updated.');
       await this.load();
@@ -157,12 +201,40 @@ export class TransactionsComponent {
     try {
       await this.api.remove('/transactions', this.deleting()!.id);
       this.deleting.set(null);
+      this.page.set(0);
       this.success.set('Your transaction was removed and the account balance is updated.');
       await this.load();
     } catch (error) {
       this.formError.set(errorMessage(error));
     } finally {
       this.saving.set(false);
+    }
+  }
+  async exportCsv(): Promise<void> {
+    const v = this.filters.getRawValue();
+    if (v.from && v.to && v.from > v.to) {
+      this.filterError.set('The start date must be before the end date.');
+      return;
+    }
+    this.exporting.set(true);
+    this.exportError.set('');
+    try {
+      const params: Record<string, string | number> = { sort: this.sort() };
+      Object.entries(v).forEach(([key, value]) => {
+        if (value) params[key] = value;
+      });
+      const blob = await this.api.exportTransactions(params);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'monelytics-transactions.csv';
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      this.success.set('Your filtered transaction CSV is ready.');
+    } catch (error) {
+      this.exportError.set(errorMessage(error));
+    } finally {
+      this.exporting.set(false);
     }
   }
 }

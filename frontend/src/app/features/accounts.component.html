@@ -1,10 +1,10 @@
 <div class="page-heading">
   <div>
     <span class="eyebrow">A STRONG FOUNDATION</span>
-    <h1>Your IRA <span>accounts.</span></h1>
+    <h1>Your <span>accounts.</span></h1>
     <p>A clear view of the savings behind your next chapter.</p>
   </div>
-  <button class="button primary" (click)="open()"><ml-icon name="plus" /> Add IRA account</button>
+  <button class="button primary" (click)="open()"><ml-icon name="plus" /> Add account</button>
 </div>
 @if (success()) {
   <div class="alert success" role="status"><ml-icon name="check" />{{ success() }}</div>
@@ -14,7 +14,7 @@
 } @else {
   <div class="account-summary card">
     <div>
-      <span class="label">Your retirement foundation</span><strong>{{ total() | currency }}</strong>
+      <span class="label">Your net worth</span><strong>{{ total() | currency }}</strong>
     </div>
     <span class="pill teal"
       >{{ accounts().length }} {{ accounts().length === 1 ? 'account' : 'accounts' }}</span
@@ -27,41 +27,56 @@
         <div class="account-card-top">
           <span
             class="circle-icon"
-            [class.teal]="account.type === 'ROTH_IRA'"
-            [class.coral]="account.type === 'TRADITIONAL_IRA'"
+            [class.teal]="account.type !== 'CREDIT_CARD'"
+            [class.coral]="account.type === 'CREDIT_CARD'"
             ><ml-icon name="wallet" /></span
-          ><span class="pill neutral">{{
-            account.type === 'ROTH_IRA' ? 'Roth IRA' : 'Traditional IRA'
-          }}</span>
+          ><span class="pill neutral">{{ accountLabel(account.type) }}</span>
         </div>
         <h2>{{ account.name }}</h2>
-        <div class="account-balance">{{ account.balance | currency }}</div>
-        <div class="account-detail">
-          <span>Contributions this year</span
-          ><strong>{{ account.annualContributions | currency }}</strong>
+        <div class="account-balance" [class.negative]="account.balance < 0">
+          {{ account.balance | currency }}
         </div>
-        <div class="beneficiary-section">
-          <div class="beneficiary-heading">
-            <h3>Beneficiaries</h3>
-            <button class="text-button" (click)="openBeneficiaries(account)">
-              Manage <ml-icon name="edit" />
-            </button>
+        @if (isRetirement(account.type)) {
+          <div class="account-detail">
+            <span>Contributions this year</span
+            ><strong>{{ account.annualContributions | currency }}</strong>
           </div>
-          @if (account.beneficiaries.length) {
-            @for (person of account.beneficiaries; track $index) {
-              <div class="beneficiary-row">
-                <span class="small-avatar">{{ person.name.charAt(0) }}</span>
-                <div>
-                  <strong>{{ person.name }}</strong
-                  ><span>{{ person.relationship }}</span>
+          <div class="beneficiary-section">
+            <div class="beneficiary-heading">
+              <h3>Beneficiaries</h3>
+              <button class="text-button" (click)="openBeneficiaries(account)">
+                Manage <ml-icon name="edit" />
+              </button>
+            </div>
+            @if (account.beneficiaries.length) {
+              @for (person of account.beneficiaries; track $index) {
+                <div class="beneficiary-row">
+                  <span class="small-avatar">{{ person.name.charAt(0) }}</span>
+                  <div>
+                    <strong>{{ person.name }}</strong
+                    ><span>{{ person.relationship }}</span>
+                  </div>
+                  <span class="pill neutral">{{ person.percentage | number: '1.0-2' }}%</span>
                 </div>
-                <span class="pill neutral">{{ person.percentage | number: '1.0-2' }}%</span>
-              </div>
+              }
+            } @else {
+              <p class="muted">Add someone to your plan. No beneficiaries assigned yet.</p>
             }
-          } @else {
-            <p class="muted">Add someone to your plan. No beneficiaries assigned yet.</p>
-          }
-        </div>
+          </div>
+        } @else {
+          <div class="account-detail">
+            <span>{{ account.type === 'CREDIT_CARD' ? 'Credit balance' : 'Account type' }}</span
+            ><strong>{{
+              account.type === 'CREDIT_CARD'
+                ? 'Negative balances represent debt'
+                : accountLabel(account.type)
+            }}</strong>
+          </div>
+          <p class="account-record-note muted">
+            Keep this record aligned with your bank statement. Transactions update the recorded
+            balance automatically.
+          </p>
+        }
         <div class="account-actions">
           <button class="button secondary small" (click)="open(account)">
             <ml-icon name="edit" /> Edit account</button
@@ -78,7 +93,7 @@
       <div class="card full-span">
         <ml-state
           title="Your future starts here"
-          description="Add your first Roth or Traditional IRA to begin tracking retirement savings."
+          description="Bring your checking, savings, credit cards, and investments into one clear view."
           icon="wallet"
           ><button class="button primary" (click)="open()">Add your first account</button></ml-state
         >
@@ -88,28 +103,30 @@
   <div class="quiet-note">
     <ml-icon name="info" />
     <p>
-      Monelytics records your IRA balances and activity. Opening an account here does not create a
-      financial account at a bank or brokerage.
+      Monelytics records your account balances and activity. Opening an account here does not create
+      a financial account at a bank or brokerage.
     </p>
   </div>
 }
 @if (editing()) {
-  <ml-dialog
-    [title]="selected() ? 'Edit IRA account' : 'Add an IRA account'"
-    (closed)="editing.set(false)"
-  >
+  <ml-dialog [title]="selected() ? 'Edit account' : 'Add an account'" (closed)="editing.set(false)">
     @if (formError()) {
       <div class="alert error" role="alert">{{ formError() }}</div>
     }
     <form [formGroup]="form" (ngSubmit)="save()" novalidate>
       <label
-        >Account name<input formControlName="name" placeholder="My Roth IRA" maxlength="80" /><span
-          class="field-error"
-          [hidden]="!invalid('name')"
+        >Account name<input
+          formControlName="name"
+          placeholder="Everyday checking"
+          maxlength="80"
+        /><span class="field-error" [hidden]="!invalid('name')"
           >Enter a name with up to 80 characters.</span
         ></label
       ><label
         >Account type<select formControlName="type">
+          <option value="CHECKING">Checking</option>
+          <option value="SAVINGS">Savings</option>
+          <option value="CREDIT_CARD">Credit card</option>
           <option value="ROTH_IRA">Roth IRA</option>
           <option value="TRADITIONAL_IRA">Traditional IRA</option>
         </select></label
@@ -119,12 +136,14 @@
           >Opening balance ($)<input
             type="number"
             formControlName="openingBalance"
-            min="0"
+            min="-100000000"
             max="100000000"
             step=".01"
-          /><span class="field-help">The current balance from your bank or brokerage.</span
+          /><span class="field-help"
+            >The current balance from your bank or brokerage. Use a negative balance for credit card
+            debt.</span
           ><span class="field-error" [hidden]="!invalid('openingBalance')"
-            >Enter a balance between $0 and $100,000,000.</span
+            >Enter a balance between -$100,000,000 and $100,000,000.</span
           ></label
         >
       }

@@ -1,0 +1,70 @@
+<div class="page-heading">
+  <div>
+    <span class="eyebrow">THE BIGGER PICTURE</span>
+    <h1>A little insight. <span>A clearer direction.</span></h1>
+    <p>Understand what comes in, what goes out, and where your money goes.</p>
+  </div>
+  <a routerLink="/transactions" class="button secondary"
+    ><ml-icon name="download" /> Transactions & CSV</a
+  >
+</div>
+<div class="month-toolbar">
+  <span class="label"
+    >Your picture for <strong>{{ monthLabel(month()) }}</strong></span
+  ><label class="month-select"
+    >Report month<input type="month" [value]="month()" (change)="changeMonth($event)"
+  /></label>
+</div>
+@if (loading() || error()) {
+  <ml-state [loading]="loading()" [error]="error()" (retry)="load()" />
+} @else if (data(); as d) {
+  <section class="stats-grid finance-stats">
+    <article class="card stat-card">
+      <span class="label">Income</span><strong>{{ d.income | currency }}</strong
+      ><span class="stat-sub">Recorded income this month</span>
+    </article>
+    <article class="card stat-card">
+      <span class="label">Expenses</span><strong>{{ d.expenses | currency }}</strong
+      ><span class="stat-sub">Including recorded bill payments</span>
+    </article>
+    <article class="card stat-card">
+      <span class="label">Net cashflow</span
+      ><strong [class.negative]="d.cashFlow < 0">{{ d.cashFlow | currency }}</strong
+      ><span class="stat-sub">Income minus expenses</span>
+    </article>
+    <article class="card stat-card">
+      <span class="label">Savings rate</span
+      ><strong>{{ d.savingsRate | number: '1.0-1' }}<small>%</small></strong
+      ><span class="stat-sub">Net cashflow as a share of income</span>
+    </article>
+  </section>
+  <div class="report-grid">
+    <section class="card section-card">
+      <div class="card-heading">
+        <div>
+          <span class="eyebrow">THE FLOW OF YOUR MONEY</span>
+          <h2>Income & expenses</h2>
+        </div>
+        <ml-icon name="chart" />
+      </div>
+      <ml-cashflow-chart [points]="d.spendingTrends" title="Six-month income and expense trend" />
+    </section>
+    <section class="card section-card">
+      <div class="card-heading">
+        <div>
+          <span class="eyebrow">SPENDING WITH CONTEXT</span>
+          <h2>Where it went</h2>
+        </div>
+        <ml-icon name="budget" />
+      </div>
+      <ml-category-breakdown [categories]="d.categoryBreakdown" />
+    </section>
+  </div>
+  <div class="quiet-note">
+    <ml-icon name="info" />
+    <p>
+      Analytics count income and expense records. Transfers and IRA contributions are excluded to
+      avoid double counting. Savings rate is a cashflow ratio, not a verified bank savings balance.
+    </p>
+  </div>
+}
