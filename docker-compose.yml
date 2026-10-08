@@ -29,10 +29,25 @@ services:
       MFA_ENCRYPTION_KEY: ${MFA_ENCRYPTION_KEY:?Set MFA_ENCRYPTION_KEY}
       API_DOCS_ENABLED: 'true'
       SERVER_FORWARD_HEADERS_STRATEGY: framework
+      SMTP_HOST: mailpit
+      SMTP_PORT: '1025'
+      SMTP_AUTH: 'false'
+      SMTP_STARTTLS: 'false'
+      MAIL_FROM: ${MAIL_FROM:-noreply@monelytics.local}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8080}
+      # Blank keys select mock; only the backend's validated local-only opt-in can use Ollama.
+      AI_PROVIDER: ${AI_PROVIDER:-mock}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_LOCAL_URL: ${AI_LOCAL_URL:-http://host.docker.internal:11434}
+      AI_MODEL: ${AI_MODEL:-llama3.2:3b}
+    extra_hosts:
+      - host.docker.internal:host-gateway
     ports:
       - '127.0.0.1:${BACKEND_PORT:-8081}:8080'
     depends_on:
       database:
+        condition: service_healthy
+      mailpit:
         condition: service_healthy
     healthcheck:
       test: [CMD, curl, --fail, --silent, http://localhost:8080/actuator/health/readiness]
@@ -41,6 +56,25 @@ services:
       start_period: 90s
       retries: 10
     restart: unless-stopped
+    networks: [private, web]
+  mailpit:
+    image: axllent/mailpit:v1.31.4
+    user: '1000:1000'
+    environment:
+      MP_MAX_MESSAGES: '200'
+      MP_ALLOWED_HOSTS: localhost,127.0.0.1,mailpit
+      MP_DISABLE_VERSION_CHECK: 'true'
+      MP_SMTP_RELAY_ALL: 'false'
+    ports:
+      - '127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025'
+      - '127.0.0.1:${MAILPIT_SMTP_PORT:-1025}:1025'
+    healthcheck:
+      test: [CMD, /mailpit, readyz]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    # Capture only: no outbound SMTP relay or external email provider is configured.
     networks: [private, web]
   frontend:
     build:

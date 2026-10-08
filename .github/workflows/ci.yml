@@ -1,16 +1,10 @@
-name: Validate and deploy Monelytics
+name: Validate Monelytics
 
 on:
   push:
     branches: [main]
   pull_request:
   workflow_dispatch:
-    inputs:
-      deploy:
-        description: Deploy to the protected production environment (creates billed AWS resources)
-        required: true
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -147,35 +141,3 @@ jobs:
       - name: Clean disposable CI containers
         if: always()
         run: docker compose down --volumes
-
-  deploy:
-    if: github.event_name == 'workflow_dispatch' && inputs.deploy && github.ref == 'refs/heads/main'
-    needs: [frontend, backend, infrastructure, container-security, end-to-end]
-    runs-on: ubuntu-24.04
-    environment: production
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
-        with:
-          node-version: '24.12.0'
-      - uses: aws-actions/configure-aws-credentials@cabfdba3510de1431bac9dba27511d97497fc100 # v5
-        with:
-          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_REGION }}
-          role-session-name: MonelyticsGitHubDeploy
-      - run: npm ci --prefix infrastructure && npm ci --prefix frontend
-      - name: Deploy tested infrastructure and Angular bundle
-        run: node scripts/deploy-aws.mjs --deploy
-        env:
-          AWS_REGION: ${{ vars.AWS_REGION }}
-          API_ORIGIN_DOMAIN: ${{ vars.API_ORIGIN_DOMAIN }}
-          ALB_CERTIFICATE_ARN: ${{ vars.ALB_CERTIFICATE_ARN }}
-          MFA_SECRET_ARN: ${{ vars.MFA_SECRET_ARN }}
-          ORIGIN_HEADER_SECRET: ${{ secrets.ORIGIN_HEADER_SECRET }}
-          HOSTED_ZONE_ID: ${{ vars.HOSTED_ZONE_ID }}
-          HOSTED_ZONE_NAME: ${{ vars.HOSTED_ZONE_NAME }}
-          WEB_DOMAIN: ${{ vars.WEB_DOMAIN }}
-          WEB_CERTIFICATE_ARN: ${{ vars.WEB_CERTIFICATE_ARN }}

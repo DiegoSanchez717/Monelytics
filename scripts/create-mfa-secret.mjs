@@ -1,25 +1,15 @@
 #!/usr/bin/env node
 import { randomBytes } from 'node:crypto';
-import { spawnSync } from 'node:child_process';
-import { chmodSync, existsSync, mkdtempSync, rmdirSync, unlinkSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
+import { existsSync, lstatSync, mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-if (!process.env.AWS_REGION) throw new Error('Set AWS_REGION and authenticate to AWS first');
-const directory = mkdtempSync(path.join(tmpdir(), 'monelytics-secret-'));
-const file = path.join(directory, 'secret.json');
-try {
-  // A temporary input file avoids putting the encryption key in command arguments or logs.
-  writeFileSync(file, JSON.stringify({
-    Name: 'monelytics/mfa-encryption-key',
-    Description: 'Stable AES-256 encryption key for Monelytics TOTP secrets; do not rotate without re-encryption',
-    SecretString: randomBytes(32).toString('base64'),
-  }), { mode: 0o600 });
-  if (process.platform !== 'win32') chmodSync(directory, 0o700);
-  const result = spawnSync('aws', ['secretsmanager', 'create-secret', '--region', process.env.AWS_REGION, '--cli-input-json', `file://${file}`, '--query', 'ARN', '--output', 'text'], { stdio: 'inherit' });
-  if (result.error) throw result.error;
-  if (result.status !== 0) process.exitCode = result.status ?? 1;
-} finally {
-  if (existsSync(file)) unlinkSync(file);
-  rmdirSync(directory);
-}
+if (process.argv.length !== 2) throw new Error('This command only generates a local key; it accepts no cloud options');
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const directory = join(root, '.local-secrets');
+if (existsSync(directory) && lstatSync(directory).isSymbolicLink()) throw new Error('Refusing a linked secret directory');
+mkdirSync(directory, { recursive: true, mode: 0o700 });
+const target = join(directory, 'mfa-encryption.key');
+// Never overwrite a stable encryption key or modify an existing .env implicitly.
+writeFileSync(target, `${randomBytes(32).toString('base64')}\n`, { mode: 0o600, flag: 'wx' });
+console.log('Generated .local-secrets/mfa-encryption.key locally. Keep it private; no cloud service was called.');
