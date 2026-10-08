@@ -74,6 +74,8 @@ class SecurityConfiguration {
                         "/api/auth/csrf",
                         "/api/auth/register",
                         "/api/auth/login",
+                        "/api/auth/forgot-password",
+                        "/api/auth/reset-password",
                         "/actuator/health/**",
                         "/v3/api-docs/**",
                         "/swagger-ui/**",
@@ -175,6 +177,8 @@ class RequestContextFilter extends OncePerRequestFilter {
       if (request.getMethod().equals("POST")
           && (request.getRequestURI().equals("/api/auth/login")
               || request.getRequestURI().equals("/api/auth/register")
+              || request.getRequestURI().equals("/api/auth/forgot-password")
+              || request.getRequestURI().equals("/api/auth/reset-password")
               || request.getRequestURI().startsWith("/api/auth/mfa/"))) {
         long now = System.currentTimeMillis();
         // Bounded, per-instance protection complements durable account lockout; deploy an edge rate
