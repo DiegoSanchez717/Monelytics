@@ -6,11 +6,13 @@ import { ApiService } from '../core/api.service';
 import { AuthService } from '../core/auth.service';
 import {
   Analytics,
+  Account,
   Budget,
   Dashboard,
   Goal,
   GoalContribution,
   Page,
+  RecurringItem,
   Transaction,
 } from '../core/models';
 import { AuthComponent } from './auth.component';
@@ -19,6 +21,9 @@ import { ReportsComponent } from './reports.component';
 import { DashboardComponent } from './dashboard.component';
 import { BudgetsComponent } from './budgets.component';
 import { TransactionsComponent } from './transactions.component';
+import { AccountsComponent } from './accounts.component';
+import { CategoriesComponent } from './categories.component';
+import { BillsComponent } from './bills.component';
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
@@ -43,6 +48,9 @@ describe('interactive request boundaries', () => {
     dashboard: vi.fn(),
     budgets: vi.fn(),
     transactions: vi.fn(),
+    save: vi.fn(),
+    update: vi.fn(),
+    payRecurring: vi.fn(),
   };
   const router = { url: '/login', navigateByUrl: vi.fn() };
   beforeEach(() => {
@@ -53,6 +61,8 @@ describe('interactive request boundaries', () => {
     api.goals.mockResolvedValue([]);
     api.contributions.mockResolvedValue([]);
     api.budgets.mockResolvedValue([]);
+    api.save.mockResolvedValue({});
+    api.update.mockResolvedValue({});
     api.analytics.mockImplementation((month: string) => Promise.resolve({ month }));
     api.dashboard.mockImplementation((month: string) => Promise.resolve({ month }));
     api.transactions.mockResolvedValue({
@@ -74,6 +84,260 @@ describe('interactive request boundaries', () => {
       ],
     });
   });
+  it('waits for bill account options before opening a valid draft', async () => {
+    const pending = deferred<Account[]>();
+    api.accounts.mockReturnValue(pending.promise);
+    api.categories.mockResolvedValue([
+      { id: 'housing', name: 'Housing', type: 'EXPENSE', color: '#EF7A6C' },
+    ]);
+    const c = TestBed.runInInjectionContext(() => new BillsComponent());
+    const initialization = c.initialize();
+    c.open();
+    expect(c.editing()).toBe(false);
+    pending.resolve([
+      {
+        id: 'checking',
+        name: 'Checking',
+        type: 'CHECKING',
+        balance: 1000,
+        annualContributions: 0,
+        beneficiaries: [],
+      },
+    ]);
+    await initialization;
+    c.open();
+    expect(c.editing()).toBe(true);
+    expect(c.form.controls.accountId.value).toBe('checking');
+    expect(c.form.controls.categoryId.value).toBe('housing');
+  });
+  const editors = [
+    {
+      name: 'accounts',
+      create: () => {
+        const c = new AccountsComponent();
+        return {
+          component: c,
+          ready: () => c.load(),
+          fill: (name: string) => c.form.controls.name.setValue(name),
+          draft: () => c.form.getRawValue(),
+          refresh: api.accounts,
+        };
+      },
+    },
+    {
+      name: 'categories',
+      create: () => {
+        const c = new CategoriesComponent();
+        return {
+          component: c,
+          ready: () => c.load(),
+          fill: (name: string) => c.form.controls.name.setValue(name),
+          draft: () => c.form.getRawValue(),
+          refresh: api.categories,
+        };
+      },
+    },
+    {
+      name: 'budgets',
+      create: () => {
+        const c = new BudgetsComponent();
+        c.month.set('2026-10');
+        return {
+          component: c,
+          ready: () => c.initialize(),
+          fill: (name: string) =>
+            c.form.patchValue({
+              month: name === 'old' ? '2026-10' : '2026-11',
+              limitAmount: name === 'old' ? 100 : 200,
+            }),
+          draft: () => c.form.getRawValue(),
+          refresh: api.budgets,
+        };
+      },
+    },
+    {
+      name: 'bills',
+      create: () => {
+        const c = new BillsComponent();
+        return {
+          component: c,
+          ready: () => c.initialize(),
+          fill: (name: string) =>
+            c.form.patchValue({ name, amount: 25, accountId: 'checking', categoryId: 'expense' }),
+          draft: () => c.form.getRawValue(),
+          refresh: api.recurring,
+        };
+      },
+    },
+    {
+      name: 'goals',
+      create: () => {
+        const c = new GoalsComponent();
+        return {
+          component: c,
+          ready: () => c.load(),
+          fill: (name: string) => c.form.patchValue({ name, targetDate: '2099-12-31' }),
+          draft: () => c.form.getRawValue(),
+          refresh: api.goals,
+        };
+      },
+    },
+    {
+      name: 'transactions',
+      create: () => {
+        const c = new TransactionsComponent();
+        return {
+          component: c,
+          ready: () => c.initialize(),
+          fill: (name: string) =>
+            c.form.patchValue({ accountId: 'checking', description: name, amount: 25 }),
+          draft: () => c.form.getRawValue(),
+          refresh: api.transactions,
+        };
+      },
+    },
+  ];
+  it.each(editors)(
+    '$name refreshes the saved record without closing or changing a new draft',
+    async ({ create }) => {
+      const editor = TestBed.runInInjectionContext(() => create());
+      const c = editor.component;
+      await editor.ready();
+      editor.refresh.mockClear();
+      c.open();
+      editor.fill('old');
+      const pending = deferred<unknown>();
+      api.save.mockReturnValueOnce(pending.promise);
+      const first = c.save();
+      expect(c.saving()).toBe(true);
+      c.editing.set(false);
+      c.open();
+      editor.fill('new');
+      const freshDraft = editor.draft();
+      await c.save();
+      expect(api.save).toHaveBeenCalledTimes(1);
+      expect(c.saving()).toBe(true);
+      pending.resolve({});
+      await first;
+      expect(c.editing()).toBe(true);
+      expect(editor.draft()).toEqual(freshDraft);
+      expect(c.formError()).toBe('');
+      expect(c.saving()).toBe(false);
+      expect(editor.refresh).toHaveBeenCalledTimes(1);
+      if (c instanceof BudgetsComponent) expect(c.month()).toBe('2026-10');
+    },
+  );
+  it.each(editors)(
+    '$name keeps an older save failure outside a reopened draft',
+    async ({ create }) => {
+      const editor = TestBed.runInInjectionContext(() => create());
+      const c = editor.component;
+      await editor.ready();
+      editor.refresh.mockClear();
+      c.open();
+      editor.fill('old');
+      const pending = deferred<unknown>();
+      api.save.mockReturnValueOnce(pending.promise);
+      const first = c.save();
+      c.editing.set(false);
+      c.open();
+      editor.fill('new');
+      const freshDraft = editor.draft();
+      pending.reject(
+        new HttpErrorResponse({
+          status: 409,
+          error: { detail: 'The previous draft could not be saved.' },
+        }),
+      );
+      await first;
+      expect(c.editing()).toBe(true);
+      expect(editor.draft()).toEqual(freshDraft);
+      expect(c.formError()).toBe('');
+      expect(c.error()).toBe('The previous draft could not be saved.');
+      expect(c.saving()).toBe(false);
+      expect(editor.refresh).not.toHaveBeenCalled();
+    },
+  );
+  it.each(['success', 'failure'] as const)(
+    'keeps a reopened beneficiary editor separate from the previous %s',
+    async (outcome) => {
+      const c = TestBed.runInInjectionContext(() => new AccountsComponent());
+      await c.load();
+      api.accounts.mockClear();
+      const account = {
+        id: 'ira',
+        name: 'Retirement',
+        type: 'ROTH_IRA',
+        balance: 0,
+        annualContributions: 0,
+        beneficiaries: [],
+      } as Account;
+      c.openBeneficiaries(account);
+      c.beneficiaryControls.at(0).patchValue({ name: 'First person', relationship: 'Spouse' });
+      const pending = deferred<unknown>();
+      api.update.mockReturnValueOnce(pending.promise);
+      const first = c.saveBeneficiaries();
+      c.beneficiaryAccount.set(null);
+      c.openBeneficiaries(account);
+      c.beneficiaryControls.at(0).patchValue({ name: 'New draft', relationship: 'Child' });
+      const freshDraft = c.beneficiaryForm.getRawValue();
+      await c.saveBeneficiaries();
+      expect(api.update).toHaveBeenCalledTimes(1);
+      if (outcome === 'success') pending.resolve({});
+      else
+        pending.reject(
+          new HttpErrorResponse({
+            status: 409,
+            error: { detail: 'The previous beneficiary update failed.' },
+          }),
+        );
+      await first;
+      expect(c.beneficiaryAccount()?.id).toBe(account.id);
+      expect(c.beneficiaryForm.getRawValue()).toEqual(freshDraft);
+      expect(c.formError()).toBe('');
+      expect(c.saving()).toBe(false);
+      expect(api.accounts).toHaveBeenCalledTimes(outcome === 'success' ? 1 : 0);
+    },
+  );
+  it.each(['success', 'failure'] as const)(
+    'keeps a reopened payment dialog separate from the previous %s',
+    async (outcome) => {
+      const c = TestBed.runInInjectionContext(() => new BillsComponent());
+      await c.initialize();
+      api.recurring.mockClear();
+      const item = {
+        id: 'rent',
+        name: 'Rent',
+        kind: 'BILL',
+        accountId: 'checking',
+        categoryId: 'housing',
+        amount: 25,
+        frequency: 'MONTHLY',
+        nextDueDate: c.today,
+        active: true,
+      } as RecurringItem;
+      c.openPayment(item);
+      const pending = deferred<unknown>();
+      api.payRecurring.mockReturnValueOnce(pending.promise);
+      const first = c.pay();
+      c.paying.set(null);
+      c.openPayment(item);
+      c.payment.controls.date.setValue('2026-01-01');
+      await c.pay();
+      expect(api.payRecurring).toHaveBeenCalledTimes(1);
+      if (outcome === 'success') pending.resolve({});
+      else
+        pending.reject(
+          new HttpErrorResponse({ status: 409, error: { detail: 'The previous payment failed.' } }),
+        );
+      await first;
+      expect(c.paying()?.id).toBe(item.id);
+      expect(c.payment.controls.date.value).toBe('2026-01-01');
+      expect(c.formError()).toBe('');
+      expect(c.saving()).toBe(false);
+      expect(api.recurring).toHaveBeenCalledTimes(outcome === 'success' ? 1 : 0);
+    },
+  );
   it('lets a non-MFA account sign in after switching away from an MFA challenge', async () => {
     auth.login.mockRejectedValueOnce(
       new HttpErrorResponse({ status: 401, error: { code: 'MFA_REQUIRED' } }),

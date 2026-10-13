@@ -34,6 +34,7 @@ export function retirementAgeValidator(control: AbstractControl): ValidationErro
   templateUrl: './goals.component.html',
 })
 export class GoalsComponent {
+  private editorGeneration = 0;
   private historyRequest = 0;
   private readonly api = inject(ApiService);
   private readonly fb = inject(FormBuilder);
@@ -132,6 +133,7 @@ export class GoalsComponent {
     return this.form.controls[name].invalid && this.form.controls[name].touched;
   }
   open(goal?: Goal): void {
+    this.editorGeneration++;
     this.selected.set(goal ?? null);
     this.form.reset({
       name: goal?.name ?? '',
@@ -145,16 +147,20 @@ export class GoalsComponent {
     this.editing.set(true);
   }
   async save(): Promise<void> {
+    if (this.saving()) return;
     this.form.markAllAsTouched();
     if (this.form.invalid) return;
     this.saving.set(true);
+    const generation = this.editorGeneration;
     try {
       await this.api.save('/goals', this.form.getRawValue(), this.selected()?.id);
-      this.editing.set(false);
+      if (generation === this.editorGeneration && this.editing()) this.editing.set(false);
       this.success.set('Your savings goal is saved.');
       await this.load();
     } catch (error) {
-      this.formError.set(errorMessage(error));
+      if (generation === this.editorGeneration && this.editing())
+        this.formError.set(errorMessage(error));
+      else this.error.set(errorMessage(error));
     } finally {
       this.saving.set(false);
     }
@@ -173,6 +179,7 @@ export class GoalsComponent {
     }
   }
   async openContributions(goal: Goal): Promise<void> {
+    this.editorGeneration++;
     this.contributionGoal.set(goal);
     this.contributions.set([]);
     this.contributionError.set('');

@@ -84,7 +84,7 @@ export class AssistantComponent {
   fallbackMessage(reply: AssistantReply): string {
     const reasons = {
       NOT_CONFIGURED: 'Hosted AI is not configured on this instance.',
-      REQUEST_LIMIT: 'The configured daily hosted-AI request limit has been reached.',
+      REQUEST_LIMIT: 'The hosted-AI request budget is currently exhausted. Try again later.',
       RATE_LIMIT: 'The hosted provider is currently rate limited.',
       UNAVAILABLE: 'The hosted provider is temporarily unavailable.',
       INVALID_RESPONSE: 'The hosted provider did not return a usable response.',

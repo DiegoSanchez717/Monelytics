@@ -63,6 +63,14 @@ test('public navigation explains the app and authenticated navigation exposes da
   await expect(page.getByRole('heading', { name: 'Ask your financial assistant' })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
   await accessible(page);
+  const settings = page.locator('.nav-actions').getByRole('link', { name: 'Settings', exact: true });
+  await expect(settings).toBeVisible();
+  await settings.click();
+  await expect(page).toHaveURL(/\/settings$/);
+  await page.setViewportSize({ width: 320, height: 740 });
+  await expect(settings).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+  await accessible(page);
 });
 
 test('finance editing removal filters calculator and profile buttons persist their results', async ({ page }) => {
@@ -73,10 +81,38 @@ test('finance editing removal filters calculator and profile buttons persist the
   });
   await post(page.request, '/accounts', { name: 'Button checking', type: 'CHECKING', openingBalance: 1000 });
   await page.goto('/categories');
+  let releaseSave!: () => void;
+  let reportStored!: () => void;
+  const stored = new Promise<void>(resolve => { reportStored = resolve; });
+  const responseGate = new Promise<void>(resolve => { releaseSave = resolve; });
+  const categoryRequests = /\/api\/categories(?:\?.*)?$/;
+  await page.route(categoryRequests, async route => {
+    if (route.request().method() !== 'POST') return route.continue();
+    // Let PostgreSQL commit the save, then delay its browser response to exercise
+    // closing and reopening a real form while a request is still in flight.
+    const response = await route.fetch();
+    reportStored();
+    await responseGate;
+    await route.fulfill({ response });
+  });
   await page.getByRole('button', { name: 'Add category', exact: true }).click();
   await page.getByLabel('Category name', { exact: true }).fill('Review expense');
   await page.getByLabel('Category color').fill('#48D1CC');
   await page.getByRole('button', { name: 'Save category', exact: true }).click();
+  try {
+    await stored;
+    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: 'Add category', exact: true }).click();
+    await page.getByLabel('Category name', { exact: true }).fill('Unsubmitted draft');
+    releaseSave();
+    await expect(page.getByRole('dialog').getByRole('button', { name: 'Save category', exact: true })).toBeEnabled();
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await expect(page.getByLabel('Category name', { exact: true })).toHaveValue('Unsubmitted draft');
+    await page.keyboard.press('Escape');
+  } finally {
+    releaseSave();
+    await page.unroute(categoryRequests);
+  }
   await page.getByRole('button', { name: 'Edit Review expense', exact: true }).click();
   await page.getByLabel('Category name', { exact: true }).fill('Reviewed expense');
   await page.getByRole('button', { name: 'Save category', exact: true }).click();
@@ -122,6 +158,7 @@ test('finance editing removal filters calculator and profile buttons persist the
   await page.getByLabel(/^Show/).selectOption('ALL');
   await page.getByRole('button', { name: 'Record payment', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(page.getByRole('dialog')).not.toBeVisible();
   expect((await (await page.request.get('/api/transactions')).json()).totalElements).toBe(0);
   await page.getByRole('button', { name: 'Record payment', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Record payment', exact: true }).click();

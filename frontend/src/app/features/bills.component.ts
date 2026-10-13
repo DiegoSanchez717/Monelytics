@@ -22,6 +22,7 @@ import { StateComponent } from '../shared/state.component';
   templateUrl: './bills.component.html',
 })
 export class BillsComponent {
+  private editorGeneration = 0;
   private readonly api = inject(ApiService);
   private readonly fb = inject(FormBuilder);
   readonly items = signal<RecurringItem[]>([]);
@@ -114,6 +115,9 @@ export class BillsComponent {
             : 'Upcoming';
   }
   open(item?: RecurringItem): void {
+    // Wait for required options so the displayed account matches the form value.
+    if (this.loading()) return;
+    this.editorGeneration++;
     this.selected.set(item ?? null);
     this.form.reset({
       name: item?.name ?? '',
@@ -129,6 +133,7 @@ export class BillsComponent {
     this.editing.set(true);
   }
   async save(): Promise<void> {
+    if (this.saving()) return;
     this.form.markAllAsTouched();
     if (this.form.invalid) {
       this.formError.set(
@@ -137,38 +142,48 @@ export class BillsComponent {
       return;
     }
     this.saving.set(true);
+    const generation = this.editorGeneration;
     this.formError.set('');
     try {
       await this.api.save('/recurring', this.form.getRawValue(), this.selected()?.id);
-      this.editing.set(false);
+      if (generation === this.editorGeneration && this.editing()) this.editing.set(false);
       this.success.set('Your recurring item is saved.');
       await this.load();
     } catch (error) {
-      this.formError.set(errorMessage(error));
+      if (generation === this.editorGeneration && this.editing())
+        this.formError.set(errorMessage(error));
+      else this.error.set(errorMessage(error));
     } finally {
       this.saving.set(false);
     }
   }
   openPayment(item: RecurringItem): void {
+    this.editorGeneration++;
     this.paying.set(item);
     this.payment.reset({ date: localDate() });
     this.formError.set('');
   }
   async pay(): Promise<void> {
+    const item = this.paying();
+    if (!item || this.saving()) return;
     this.payment.markAllAsTouched();
     if (this.payment.invalid || this.payment.controls.date.value > this.today) {
       this.formError.set('Choose a payment date that is today or earlier.');
       return;
     }
     this.saving.set(true);
+    const generation = this.editorGeneration;
     this.formError.set('');
     try {
-      await this.api.payRecurring(this.paying()!, this.payment.controls.date.value);
-      this.paying.set(null);
+      await this.api.payRecurring(item, this.payment.controls.date.value);
+      if (generation === this.editorGeneration && this.paying()?.id === item.id)
+        this.paying.set(null);
       this.success.set('Payment recorded. Your balance, spending, and next due date are updated.');
       await this.load();
     } catch (error) {
-      this.formError.set(errorMessage(error));
+      if (generation === this.editorGeneration && this.paying()?.id === item.id)
+        this.formError.set(errorMessage(error));
+      else this.error.set(errorMessage(error));
     } finally {
       this.saving.set(false);
     }

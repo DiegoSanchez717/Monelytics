@@ -20,6 +20,9 @@ import { StateComponent } from '../shared/state.component';
   templateUrl: './accounts.component.html',
 })
 export class AccountsComponent {
+  // A completed request refreshes records; only its original dialog session
+  // may close the editor or display a field error.
+  private editorGeneration = 0;
   readonly accountLabel = accountLabel;
   isRetirement(type: AccountType): boolean {
     return type === 'ROTH_IRA' || type === 'TRADITIONAL_IRA';
@@ -78,6 +81,7 @@ export class AccountsComponent {
     }
   }
   open(account?: Account): void {
+    this.editorGeneration++;
     this.selected.set(account ?? null);
     this.form.reset({
       name: account?.name ?? '',
@@ -88,6 +92,7 @@ export class AccountsComponent {
     this.editing.set(true);
   }
   async save(): Promise<void> {
+    if (this.saving()) return;
     this.form.markAllAsTouched();
     if (this.form.invalid) return;
     if (
@@ -99,6 +104,7 @@ export class AccountsComponent {
       return;
     }
     this.saving.set(true);
+    const generation = this.editorGeneration;
     try {
       const v = this.form.getRawValue();
       await this.api.save(
@@ -106,16 +112,19 @@ export class AccountsComponent {
         this.selected() ? { name: v.name, type: v.type } : v,
         this.selected()?.id,
       );
-      this.editing.set(false);
+      if (generation === this.editorGeneration && this.editing()) this.editing.set(false);
       this.success.set('Your account is saved.');
       await this.load();
     } catch (error) {
-      this.formError.set(errorMessage(error));
+      if (generation === this.editorGeneration && this.editing())
+        this.formError.set(errorMessage(error));
+      else this.error.set(errorMessage(error));
     } finally {
       this.saving.set(false);
     }
   }
   openBeneficiaries(account: Account): void {
+    this.editorGeneration++;
     this.formError.set('');
     this.beneficiaryControls.clear();
     for (const b of account.beneficiaries)
@@ -139,6 +148,8 @@ export class AccountsComponent {
     );
   }
   async saveBeneficiaries(): Promise<void> {
+    const account = this.beneficiaryAccount();
+    if (!account || this.saving()) return;
     this.beneficiaryForm.markAllAsTouched();
     if (
       this.beneficiaryForm.invalid ||
@@ -150,16 +161,20 @@ export class AccountsComponent {
       return;
     }
     this.saving.set(true);
+    const generation = this.editorGeneration;
     try {
       await this.api.update(
-        `/accounts/${this.beneficiaryAccount()!.id}/beneficiaries`,
+        `/accounts/${account.id}/beneficiaries`,
         this.beneficiaryForm.getRawValue(),
       );
-      this.beneficiaryAccount.set(null);
+      if (generation === this.editorGeneration && this.beneficiaryAccount()?.id === account.id)
+        this.beneficiaryAccount.set(null);
       this.success.set('Your beneficiaries are updated.');
       await this.load();
     } catch (error) {
-      this.formError.set(errorMessage(error));
+      if (generation === this.editorGeneration && this.beneficiaryAccount()?.id === account.id)
+        this.formError.set(errorMessage(error));
+      else this.error.set(errorMessage(error));
     } finally {
       this.saving.set(false);
     }

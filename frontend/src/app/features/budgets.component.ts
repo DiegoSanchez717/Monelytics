@@ -20,6 +20,7 @@ import { StateComponent } from '../shared/state.component';
   templateUrl: './budgets.component.html',
 })
 export class BudgetsComponent {
+  private editorGeneration = 0;
   private loadRequest = 0;
   private readonly api = inject(ApiService);
   private readonly fb = inject(FormBuilder);
@@ -93,6 +94,7 @@ export class BudgetsComponent {
     ];
   }
   open(budget?: Budget): void {
+    this.editorGeneration++;
     this.selected.set(budget ?? null);
     this.form.reset({
       categoryId: budget?.categoryId ?? '',
@@ -103,6 +105,7 @@ export class BudgetsComponent {
     this.editing.set(true);
   }
   async save(): Promise<void> {
+    if (this.saving()) return;
     this.form.markAllAsTouched();
     if (this.form.invalid) {
       this.formError.set('Choose a month and a positive budget amount.');
@@ -114,6 +117,7 @@ export class BudgetsComponent {
       return;
     }
     this.saving.set(true);
+    const generation = this.editorGeneration;
     this.formError.set('');
     try {
       await this.api.save(
@@ -121,12 +125,17 @@ export class BudgetsComponent {
         { ...value, categoryId: value.categoryId || null },
         this.selected()?.id,
       );
-      this.month.set(this.form.controls.month.value);
-      this.editing.set(false);
+      if (generation === this.editorGeneration && this.editing()) {
+        // Use the submitted month, never the values of a subsequently opened draft.
+        this.month.set(value.month);
+        this.editing.set(false);
+      }
       this.success.set('Your monthly budget is saved.');
       await this.load();
     } catch (error) {
-      this.formError.set(errorMessage(error));
+      if (generation === this.editorGeneration && this.editing())
+        this.formError.set(errorMessage(error));
+      else this.error.set(errorMessage(error));
     } finally {
       this.saving.set(false);
     }

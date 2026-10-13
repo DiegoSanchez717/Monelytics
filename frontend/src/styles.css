@@ -2465,7 +2465,7 @@ tr:last-child td {
   .nav-actions {
     gap: 6px;
   }
-  .nav-actions > .icon-button:not(.mobile-toggle):not(.logout) {
+  .nav-actions > .icon-button:not(.mobile-toggle):not(.logout):not(.settings-link) {
     display: none;
   }
   .nav-actions > .avatar {
@@ -4863,4 +4863,21 @@ textarea {
 .assistant-answer {
   white-space: pre-line;
   overflow-wrap: anywhere;
+}
+@media (max-width: 380px) {
+  .topbar:has(.finance-nav) {
+    padding-inline: 11px;
+    gap: 6px;
+  }
+  .topbar:has(.finance-nav) .brand {
+    font-size: 16px;
+    gap: 6px;
+  }
+  .topbar:has(.finance-nav) .brand-mark {
+    width: 32px;
+    height: 32px;
+  }
+  .topbar:has(.finance-nav) .nav-actions {
+    gap: 2px;
+  }
 }

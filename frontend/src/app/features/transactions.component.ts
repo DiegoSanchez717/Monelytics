@@ -24,6 +24,7 @@ import { StateComponent } from '../shared/state.component';
   templateUrl: './transactions.component.html',
 })
 export class TransactionsComponent {
+  private editorGeneration = 0;
   private loadRequest = 0;
   readonly isOutflow = isOutflow;
   readonly transactionLabel = transactionLabel;
@@ -145,6 +146,7 @@ export class TransactionsComponent {
     return this.form.controls[name].invalid && this.form.controls[name].touched;
   }
   open(tx?: Transaction): void {
+    this.editorGeneration++;
     this.selected.set(tx ?? null);
     this.form.reset({
       accountId: tx?.accountId ?? this.accounts()[0]?.id ?? '',
@@ -159,6 +161,7 @@ export class TransactionsComponent {
     this.editing.set(true);
   }
   async save(): Promise<void> {
+    if (this.saving()) return;
     this.form.markAllAsTouched();
     if (this.form.invalid) return;
     const value = this.form.getRawValue();
@@ -180,6 +183,7 @@ export class TransactionsComponent {
       return;
     }
     this.saving.set(true);
+    const generation = this.editorGeneration;
     try {
       await this.api.save(
         '/transactions',
@@ -190,11 +194,13 @@ export class TransactionsComponent {
         },
         this.selected()?.id,
       );
-      this.editing.set(false);
+      if (generation === this.editorGeneration && this.editing()) this.editing.set(false);
       this.success.set('Your transaction is saved and the account balance is updated.');
       await this.load();
     } catch (error) {
-      this.formError.set(errorMessage(error));
+      if (generation === this.editorGeneration && this.editing())
+        this.formError.set(errorMessage(error));
+      else this.error.set(errorMessage(error));
     } finally {
       this.saving.set(false);
     }

@@ -11,6 +11,7 @@ import { StateComponent } from '../shared/state.component';
   templateUrl: './categories.component.html',
 })
 export class CategoriesComponent {
+  private editorGeneration = 0;
   private readonly api = inject(ApiService);
   private readonly fb = inject(FormBuilder);
   readonly categories = signal<Category[]>([]);
@@ -42,6 +43,7 @@ export class CategoriesComponent {
     }
   }
   open(category?: Category): void {
+    this.editorGeneration++;
     this.selected.set(category ?? null);
     this.form.reset({
       name: category?.name ?? '',
@@ -52,17 +54,21 @@ export class CategoriesComponent {
     this.editing.set(true);
   }
   async save(): Promise<void> {
+    if (this.saving()) return;
     this.form.markAllAsTouched();
     if (this.form.invalid) return;
     this.saving.set(true);
+    const generation = this.editorGeneration;
     this.formError.set('');
     try {
       await this.api.save('/categories', this.form.getRawValue(), this.selected()?.id);
-      this.editing.set(false);
+      if (generation === this.editorGeneration && this.editing()) this.editing.set(false);
       this.success.set('Your category is saved.');
       await this.load();
     } catch (error) {
-      this.formError.set(errorMessage(error));
+      if (generation === this.editorGeneration && this.editing())
+        this.formError.set(errorMessage(error));
+      else this.error.set(errorMessage(error));
     } finally {
       this.saving.set(false);
     }

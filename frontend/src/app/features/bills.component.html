@@ -4,7 +4,7 @@
     <h1>Bills, <span>without the surprises.</span></h1>
     <p>Stay ahead of recurring payments and subscriptions.</p>
   </div>
-  <button class="button primary" (click)="open()">
+  <button class="button primary" [disabled]="loading()" (click)="open()">
     <ml-icon name="plus" /> Add recurring item
   </button>
 </div>

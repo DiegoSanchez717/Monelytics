@@ -160,7 +160,19 @@ describe('financial assistant', () => {
     expect(fixture.nativeElement.querySelector('.assistant-privacy-note').textContent).toContain(
       'not automatically sent',
     );
+    expect(
+      fixture.nativeElement
+        .querySelector('form button[type="submit"], form button.button.primary')
+        .getAttribute('aria-describedby'),
+    ).toBe('assistant-privacy');
+    expect(fixture.nativeElement.querySelector('#assistant-privacy')).not.toBeNull();
     expect(api.askAssistant).not.toHaveBeenCalled();
+  });
+  it('explains a request-budget fallback without claiming the daily count is exhausted', () => {
+    const c = component();
+    const message = c.fallbackMessage({ ...response, fallbackReason: 'REQUEST_LIMIT' });
+    expect(message).toContain('request budget is currently exhausted');
+    expect(message).not.toContain('daily');
   });
   it('keeps the question editable and shows no invented answer on failure', async () => {
     api.askAssistant.mockRejectedValueOnce(
