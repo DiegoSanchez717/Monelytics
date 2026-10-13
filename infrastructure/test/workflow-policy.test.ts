@@ -32,7 +32,7 @@ function assertZeroSpendWorkflow(source: string): void {
     assert.match(revision, /^[a-f0-9]{40}$/, 'actions must be pinned to a reviewed commit');
   }
   const nodeSetups = [...source.matchAll(/uses: actions\/setup-node@[a-f0-9]{40}[^\r\n]*\r?\n([\s\S]*?)(?=^      -|(?![\s\S]))/gm)];
-  assert.equal(nodeSetups.length, 3);
+  assert.equal(nodeSetups.length, 4, 'review the policy before adding another Node setup');
   for (const [, inputs] of nodeSetups) {
     assert.match(inputs, /^          package-manager-cache: false\r?$/m, 'setup-node automatic caching must be disabled');
   }
