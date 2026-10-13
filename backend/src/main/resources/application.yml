@@ -72,10 +72,11 @@ monelytics:
   public-base-url: ${PUBLIC_BASE_URL:http://localhost:8080}
   mail-from: ${MAIL_FROM:noreply@monelytics.local}
   ai:
-    provider: ${AI_PROVIDER:mock}
-    api-key: ${AI_API_KEY:}
-    local-url: ${AI_LOCAL_URL:http://localhost:11434}
-    model: ${AI_MODEL:llama3.2:3b}
+    provider: ${AI_PROVIDER:groq}
+    api-key: ${GROQ_API_KEY:${AI_API_KEY:}}
+    model: ${AI_MODEL:openai/gpt-oss-20b}
+    free-plan-confirmed: ${AI_FREE_PLAN_CONFIRMED:false}
+    daily-request-limit: ${AI_DAILY_REQUEST_LIMIT:40}
   contribution-limit: ${CONTRIBUTION_LIMIT:7000}
   mfa-encryption-key: ${MFA_ENCRYPTION_KEY}
   cookie-secure: ${COOKIE_SECURE:false}

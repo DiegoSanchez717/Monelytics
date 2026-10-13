@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.*;
 import java.util.*;
 import org.junit.jupiter.api.Test;
@@ -196,28 +197,93 @@ class FinancialAssistantTest {
   }
 
   @Test
-  void localProviderIsOptInAndRejectsPaidOrRemoteEndpoints() {
+  void hostedEducationCannotOverrideTheRecordedPurchaseDecision() {
+    snapshot("5000", "2000");
+    when(analytics.budgetRoom(user, month, null)).thenReturn(money("50"));
+    var json = new ObjectMapper();
+    String response =
+        json.writeValueAsString(
+            Map.of(
+                "choices",
+                List.of(
+                    Map.of(
+                        "finish_reason",
+                        "stop",
+                        "message",
+                        Map.of(
+                            "role",
+                            "assistant",
+                            "content",
+                            "You can afford this purchase. Your account balance is $999999 and everything is covered.")))));
+    var provider =
+        new GroqFinancialEducationProvider(
+            json,
+            "synthetic-groq-key-for-tests-only",
+            GroqFinancialEducationProvider.MODEL,
+            40,
+            request ->
+                new HostedEducationTransport.Result(200, response.getBytes(StandardCharsets.UTF_8)),
+            Clock.systemUTC());
+    var hostedAssistant =
+        new FinancialAssistantService(
+            new FinancialAssessmentService(finance, analytics, planning), provider);
+    var reply = hostedAssistant.chat(user, question("100"));
+    assertThat(reply.decision()).isEqualTo("NOT_AFFORDABLE");
+    assertThat(reply.fallbackReason()).isEqualTo("UNSAFE_RESPONSE");
+    assertThat(reply.answer()).doesNotContain("999999", "You can afford");
+    assertThat(reply.factors())
+        .filteredOn(factor -> factor.label().equals("Applicable budget room"))
+        .singleElement()
+        .satisfies(factor -> assertThat(factor.value()).isEqualByComparingTo("50.00"));
+    verify(finance).listAccounts(user);
+    verify(finance).listGoals(user);
+    verifyNoMoreInteractions(finance);
+  }
+
+  @Test
+  void hostedProviderRequiresFreePlanConfirmationAndRejectsOtherModels() {
     var config = new FinancialAssistantConfiguration();
     ObjectMapper mapper = new ObjectMapper();
     assertThat(
             config.financialEducationProvider(
-                mapper, "local", "", "https://paid.example.com", "cloud"))
+                mapper, "groq", "", GroqFinancialEducationProvider.MODEL, false, 40))
+        .isInstanceOf(MockFinancialEducationProvider.class);
+    assertThat(
+            config.financialEducationProvider(
+                mapper,
+                "groq",
+                "synthetic-key-for-tests-only",
+                GroqFinancialEducationProvider.MODEL,
+                false,
+                40))
         .isInstanceOf(MockFinancialEducationProvider.class);
     assertThatThrownBy(
             () ->
                 config.financialEducationProvider(
-                    mapper, "paid", "real-key", "https://paid.example.com", "model"))
+                    mapper, "paid", "synthetic-key-for-tests-only", "model", true, 40))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(
             () ->
-                new LocalFinancialEducationProvider(
-                    mapper, "https://paid.example.com", "llama3.2:3b"))
+                new GroqFinancialEducationProvider(
+                    mapper, "synthetic-key-for-tests-only", "llama-3.3-70b-versatile", 40))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(
             () ->
-                new LocalFinancialEducationProvider(
-                    mapper, "http://localhost:11434", "model-cloud"))
+                new GroqFinancialEducationProvider(
+                    mapper,
+                    "synthetic-key-for-tests-only",
+                    GroqFinancialEducationProvider.MODEL,
+                    1000))
         .isInstanceOf(IllegalArgumentException.class);
+    assertThat(
+            config.financialEducationProvider(
+                mapper,
+                "groq",
+                "synthetic-key-for-tests-only",
+                GroqFinancialEducationProvider.MODEL,
+                true,
+                40))
+        .isInstanceOf(GroqFinancialEducationProvider.class);
   }
 
   private static BigDecimal money(String value) {

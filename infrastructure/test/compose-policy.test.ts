@@ -28,3 +28,19 @@ test('Compose honors operator release settings instead of silently keeping insec
   assert.equal(environment.DEMO_ENABLED, 'false');
   assert.equal(environment.API_DOCS_ENABLED, 'false');
 });
+
+test('hosted AI defaults never enable an unconfirmed or credential-free account', () => {
+  const environment = configuredBackend({ AI_API_KEY: '', GROQ_API_KEY: '', AI_FREE_PLAN_CONFIRMED: '' });
+  assert.equal(environment.AI_PROVIDER, 'groq');
+  assert.equal(environment.AI_API_KEY, '');
+  assert.equal(environment.AI_FREE_PLAN_CONFIRMED, 'false');
+  assert.equal(environment.AI_DAILY_REQUEST_LIMIT, '40');
+  assert.equal(environment.AI_MODEL, 'openai/gpt-oss-20b');
+});
+
+test('Compose forwards explicit Free-plan confirmation and a bounded hosted request limit', () => {
+  const environment = configuredBackend({ AI_FREE_PLAN_CONFIRMED: 'true', AI_DAILY_REQUEST_LIMIT: '12', GROQ_API_KEY: 'synthetic-groq-fixture', AI_API_KEY: 'synthetic-alias-fixture' });
+  assert.equal(environment.AI_FREE_PLAN_CONFIRMED, 'true');
+  assert.equal(environment.AI_DAILY_REQUEST_LIMIT, '12');
+  assert.equal(environment.AI_API_KEY, 'synthetic-groq-fixture');
+});

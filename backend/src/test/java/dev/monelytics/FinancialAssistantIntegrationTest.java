@@ -133,6 +133,12 @@ class FinancialAssistantIntegrationTest {
   @Test
   void newUserGetsInsufficientDataAndRequestsAreValidatedAndProtected() throws Exception {
     Cookie owner = register();
+    mvc.perform(get("/api/assistant/status").cookie(owner))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.provider").value("MOCK"))
+        .andExpect(jsonPath("$.configured").value(false))
+        .andExpect(jsonPath("$.dailyRequestLimit").value(0));
+    mvc.perform(get("/api/assistant/status")).andExpect(status().isUnauthorized());
     String request =
         json.writeValueAsString(Map.of("question", "Could I buy this?", "purchaseAmount", 20));
     mvc.perform(
@@ -142,7 +148,8 @@ class FinancialAssistantIntegrationTest {
                 .contentType("application/json")
                 .content(request))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.decision").value("INSUFFICIENT_DATA"));
+        .andExpect(jsonPath("$.decision").value("INSUFFICIENT_DATA"))
+        .andExpect(jsonPath("$.fallbackReason").value("NOT_CONFIGURED"));
     mvc.perform(
             post("/api/assistant/chat")
                 .with(realCsrf(mvc, json))

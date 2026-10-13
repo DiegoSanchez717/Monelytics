@@ -9,6 +9,10 @@ spring:
 monelytics:
   demo-enabled: false
   mfa-encryption-key: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+  ai:
+    provider: mock
+    api-key: ""
+    free-plan-confirmed: false
 logging:
   level:
     root: WARN
