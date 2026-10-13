@@ -4,7 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ApiService, errorMessage } from '../core/api.service';
 import { currentMonth } from '../core/finance.utils';
-import { AssistantQuestion, AssistantReply, Category } from '../core/models';
+import { AssistantQuestion, AssistantReply, AssistantStatus, Category } from '../core/models';
 import { IconComponent } from '../shared/icon.component';
 
 @Component({
@@ -22,6 +22,9 @@ export class AssistantComponent {
   readonly error = signal('');
   readonly reply = signal<AssistantReply | null>(null);
   readonly askedQuestion = signal('');
+  readonly providerStatus = signal<AssistantStatus | null>(null);
+  readonly providerLoading = signal(true);
+  readonly providerError = signal('');
   readonly announcement = computed(() => {
     const answer = this.reply();
     return answer ? `Guidance ready. ${this.decisionLabel(answer)}. Review the factors below.` : '';
@@ -62,6 +65,34 @@ export class AssistantComponent {
   });
   constructor() {
     void this.loadCategories();
+    void this.loadProvider();
+  }
+  async loadProvider(): Promise<void> {
+    this.providerLoading.set(true);
+    this.providerError.set('');
+    try {
+      this.providerStatus.set(await this.api.assistantStatus());
+    } catch (error) {
+      this.providerError.set(errorMessage(error));
+    } finally {
+      this.providerLoading.set(false);
+    }
+  }
+  providerLabel(reply: AssistantReply): string {
+    return reply.provider === 'GROQ' ? 'Groq assistant' : 'Educational fallback';
+  }
+  fallbackMessage(reply: AssistantReply): string {
+    const reasons = {
+      NOT_CONFIGURED: 'Hosted AI is not configured on this instance.',
+      REQUEST_LIMIT: 'The configured daily hosted-AI request limit has been reached.',
+      RATE_LIMIT: 'The hosted provider is currently rate limited.',
+      UNAVAILABLE: 'The hosted provider is temporarily unavailable.',
+      INVALID_RESPONSE: 'The hosted provider did not return a usable response.',
+      UNSAFE_RESPONSE: 'The hosted response did not meet the educational guidance checks.',
+      UNSUPPORTED_QUESTION:
+        'This question is outside the hosted assistant’s supported educational scope.',
+    };
+    return `${reply.fallbackReason ? reasons[reply.fallbackReason] : 'Hosted AI was not used for this response.'} Reviewed educational guidance and your recorded financial factors are shown below.`;
   }
   async loadCategories(): Promise<void> {
     this.categoriesLoading.set(true);
@@ -117,6 +148,7 @@ export class AssistantComponent {
     this.askedQuestion.set(question.question);
     try {
       this.reply.set(await this.api.askAssistant(question));
+      void this.loadProvider();
     } catch (error) {
       this.error.set(errorMessage(error));
     } finally {

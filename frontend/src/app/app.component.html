@@ -2,38 +2,26 @@
 <div class="app-frame">
   <header class="topbar">
     <a class="brand" [routerLink]="auth.user() ? '/dashboard' : '/'" aria-label="Monelytics home"
-      ><span class="brand-mark"
-        ><svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <path
-            d="M6 24V8l10 12L26 8v16"
-            stroke="currentColor"
-            stroke-width="2.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          /></svg></span
-      ><span>Monelytics</span></a
+      ><span class="brand-mark"><ml-brand-mark /></span><span>Monelytics</span></a
     >
     @if (auth.user()) {
       <nav class="main-nav finance-nav" [class.open]="mobileOpen()" aria-label="Main navigation">
         <a routerLink="/dashboard" routerLinkActive="active" (click)="mobileOpen.set(false)"
-          >Overview</a
+          >Dashboard</a
         ><a routerLink="/transactions" routerLinkActive="active" (click)="mobileOpen.set(false)"
           >Transactions</a
         ><a routerLink="/budgets" routerLinkActive="active" (click)="mobileOpen.set(false)"
           >Budgets</a
         ><a routerLink="/bills" routerLinkActive="active" (click)="mobileOpen.set(false)">Bills</a
-        ><a routerLink="/goals" routerLinkActive="active" (click)="mobileOpen.set(false)">Goals</a>
+        ><a routerLink="/goals" routerLinkActive="active" (click)="closeNavigation()">Goals</a
+        ><a routerLink="/assistant" routerLinkActive="active" (click)="closeNavigation()"
+          >Assistant</a
+        >
         <details class="nav-more" [open]="moreOpen() || mobileOpen()">
           <summary (click)="$event.preventDefault(); moreOpen.set(!moreOpen())">
             More <ml-icon name="chevron" />
           </summary>
           <div class="nav-more-menu">
-            <a
-              routerLink="/assistant"
-              routerLinkActive="active"
-              (click)="mobileOpen.set(false); moreOpen.set(false)"
-              ><ml-icon name="sparkles" /> Assistant</a
-            >
             <a
               routerLink="/accounts"
               routerLinkActive="active"
@@ -50,10 +38,10 @@
               (click)="mobileOpen.set(false); moreOpen.set(false)"
               ><ml-icon name="budget" /> Categories</a
             ><a
-              routerLink="/settings"
+              routerLink="/how-it-works"
               routerLinkActive="active"
               (click)="mobileOpen.set(false); moreOpen.set(false)"
-              ><ml-icon name="settings" /> Settings</a
+              ><ml-icon name="info" /> How it works</a
             >
             @if (auth.user()?.role === 'ADMIN') {
               <a
@@ -68,6 +56,14 @@
       </nav>
       <div class="nav-actions">
         <ml-notifications /><a
+          class="icon-button settings-link"
+          routerLink="/settings"
+          routerLinkActive="active"
+          aria-label="Settings"
+          title="Settings"
+          (click)="closeNavigation()"
+          ><ml-icon name="settings" /></a
+        ><a
           routerLink="/settings"
           class="avatar"
           [attr.aria-label]="'Profile for ' + auth.user()?.firstName"
@@ -85,8 +81,8 @@
       </div>
     } @else {
       <nav class="public-nav" aria-label="Public navigation">
-        <a href="/#how-it-works">How it works</a><a href="/#security">Built for peace of mind</a
-        ><a routerLink="/login">Sign in</a
+        <a routerLink="/how-it-works" routerLinkActive="active">How it works</a
+        ><a routerLink="/login" routerLinkActive="active">Sign in</a
         ><a routerLink="/register" class="button small primary"
           >Get started <ml-icon name="arrow"
         /></a>
@@ -98,7 +94,9 @@
   }
   <main id="main" tabindex="-1"><router-outlet /></main>
   <footer class="footer">
-    <span class="footer-brand">Monelytics <span>· A clearer financial future.</span></span
+    <span class="footer-brand"
+      ><span class="footer-mark"><ml-brand-mark /></span>Monelytics
+      <span>· A clearer financial future.</span></span
     ><span>Less guesswork. More possibilities.</span
     ><span class="footer-status"><i></i> Your data. Your control.</span>
   </footer>

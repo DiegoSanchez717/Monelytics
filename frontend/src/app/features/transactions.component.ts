@@ -24,6 +24,7 @@ import { StateComponent } from '../shared/state.component';
   templateUrl: './transactions.component.html',
 })
 export class TransactionsComponent {
+  private loadRequest = 0;
   readonly isOutflow = isOutflow;
   readonly transactionLabel = transactionLabel;
   readonly categories = signal<Category[]>([]);
@@ -91,6 +92,7 @@ export class TransactionsComponent {
     }
   }
   async load(): Promise<void> {
+    const request = ++this.loadRequest;
     this.loading.set(true);
     this.error.set('');
     try {
@@ -102,11 +104,12 @@ export class TransactionsComponent {
       Object.entries(this.filters.getRawValue()).forEach(([key, value]) => {
         if (value) params[key] = value;
       });
-      this.pageData.set(await this.api.transactions(params));
+      const data = await this.api.transactions(params);
+      if (request === this.loadRequest) this.pageData.set(data);
     } catch (error) {
-      this.error.set(errorMessage(error));
+      if (request === this.loadRequest) this.error.set(errorMessage(error));
     } finally {
-      this.loading.set(false);
+      if (request === this.loadRequest) this.loading.set(false);
     }
   }
   filter(): void {

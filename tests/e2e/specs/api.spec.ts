@@ -18,8 +18,8 @@ async function newUser(api: APIRequestContext) {
     firstName: 'Taylor', lastName: 'Test', email, password,
   });
   expect(registered.ok(), await registered.text()).toBeTruthy();
-  const login = await mutate(api, 'POST', '/auth/login', { email, password });
-  expect(login.ok(), await login.text()).toBeTruthy();
+  // Registration establishes the session. Login is exercised by MFA and browser flows;
+  // avoid redundant auth requests so the suite respects the production rate limit.
   return email;
 }
 

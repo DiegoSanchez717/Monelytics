@@ -1,12 +1,17 @@
 dialog {
-  border: 1px solid #dde8e9;
+  border: 1px solid #ffffffd9;
   border-radius: 22px;
   padding: 28px;
   width: min(560px, calc(100vw - 32px));
   max-height: 90dvh;
   color: var(--ink);
-  background: #fff;
-  box-shadow: 0 30px 100px #12323b30;
+  background: var(--glass-raised, #fff);
+  backdrop-filter: blur(22px) saturate(110%);
+  -webkit-backdrop-filter: blur(22px) saturate(110%);
+  box-shadow:
+    0 30px 100px #12323b30,
+    inset 0 1px 0 #ffffffd9;
+  overflow-y: auto;
 }
 dialog::backdrop {
   background: #102f3655;
@@ -21,4 +26,28 @@ dialog::backdrop {
 .dialog-heading h2 {
   margin: 8px 0 0;
   font-size: 24px;
+}
+@media (prefers-reduced-transparency: reduce) {
+  dialog {
+    background: #fff;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  dialog::backdrop {
+    backdrop-filter: none;
+    background: #102f36b3;
+  }
+}
+@media (max-width: 600px) {
+  dialog {
+    padding: 23px;
+    border-radius: 18px;
+    max-height: 88dvh;
+  }
+  .dialog-heading {
+    gap: 15px;
+  }
+  .dialog-heading h2 {
+    font-size: 21px;
+  }
 }

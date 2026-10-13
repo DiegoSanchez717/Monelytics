@@ -168,7 +168,7 @@ export interface AssistantQuestion {
 }
 export interface AssistantReply {
   answer: string;
-  provider: 'MOCK' | 'LOCAL';
+  provider: 'MOCK' | 'GROQ';
   decision:
     | 'NOT_REQUESTED'
     | 'LIKELY_AFFORDABLE'
@@ -180,4 +180,21 @@ export interface AssistantReply {
   disclaimer: string;
   readOnly: true;
   asOf: string;
+  fallbackReason?:
+    | 'NOT_CONFIGURED'
+    | 'REQUEST_LIMIT'
+    | 'RATE_LIMIT'
+    | 'UNAVAILABLE'
+    | 'INVALID_RESPONSE'
+    | 'UNSAFE_RESPONSE'
+    | 'UNSUPPORTED_QUESTION'
+    | null;
+}
+export interface AssistantStatus {
+  provider: 'GROQ' | 'MOCK';
+  configured: boolean;
+  model: string | null;
+  dailyRequestLimit: number;
+  remainingRequests: number;
+  disclosure: string;
 }

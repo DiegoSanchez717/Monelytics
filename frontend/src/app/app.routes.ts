@@ -7,6 +7,12 @@ export const routes: Routes = [
     title: 'Monelytics · A clearer picture of your money',
   },
   {
+    path: 'how-it-works',
+    loadComponent: () =>
+      import('./features/how-it-works.component').then((m) => m.HowItWorksComponent),
+    title: 'How it works · Monelytics',
+  },
+  {
     path: 'forgot-password',
     loadComponent: () =>
       import('./features/password-reset.component').then((m) => m.PasswordResetComponent),
@@ -34,7 +40,7 @@ export const routes: Routes = [
     path: 'dashboard',
     canActivate: [authGuard],
     loadComponent: () => import('./features/dashboard.component').then((m) => m.DashboardComponent),
-    title: 'Overview · Monelytics',
+    title: 'Dashboard · Monelytics',
   },
   {
     path: 'accounts',

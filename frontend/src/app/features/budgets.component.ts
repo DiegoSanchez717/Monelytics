@@ -20,6 +20,7 @@ import { StateComponent } from '../shared/state.component';
   templateUrl: './budgets.component.html',
 })
 export class BudgetsComponent {
+  private loadRequest = 0;
   private readonly api = inject(ApiService);
   private readonly fb = inject(FormBuilder);
   readonly month = signal(currentMonth());
@@ -52,14 +53,16 @@ export class BudgetsComponent {
     }
   }
   async load(): Promise<void> {
+    const request = ++this.loadRequest;
     this.loading.set(true);
     this.error.set('');
     try {
-      this.budgets.set(await this.api.budgets(this.month()));
+      const budgets = await this.api.budgets(this.month());
+      if (request === this.loadRequest) this.budgets.set(budgets);
     } catch (error) {
-      this.error.set(errorMessage(error));
+      if (request === this.loadRequest) this.error.set(errorMessage(error));
     } finally {
-      this.loading.set(false);
+      if (request === this.loadRequest) this.loading.set(false);
     }
   }
   changeMonth(event: Event): void {

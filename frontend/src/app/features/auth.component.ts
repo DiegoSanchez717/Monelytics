@@ -6,6 +6,8 @@ import { AuthService } from '../core/auth.service';
 import { errorMessage } from '../core/api.service';
 import { IconComponent } from '../shared/icon.component';
 import { passwordByteLimit } from '../core/validators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { merge } from 'rxjs';
 @Component({
   selector: 'ml-auth',
   imports: [ReactiveFormsModule, RouterLink, IconComponent],
@@ -39,6 +41,20 @@ export class AuthComponent {
     code: [''],
     consent: [false, this.register ? [Validators.requiredTrue] : []],
   });
+  constructor() {
+    // An MFA challenge belongs to the credentials that triggered it. Editing
+    // those credentials must let the server evaluate the next login afresh.
+    merge(this.form.controls.email.valueChanges, this.form.controls.password.valueChanges)
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => {
+        if (!this.mfaRequired()) return;
+        this.mfaRequired.set(false);
+        this.form.controls.code.reset('', { emitEvent: false });
+        this.form.controls.code.clearValidators();
+        this.form.controls.code.updateValueAndValidity({ emitEvent: false });
+        this.error.set('');
+      });
+  }
   invalid(name: 'firstName' | 'lastName' | 'email' | 'password' | 'code' | 'consent'): boolean {
     return this.form.controls[name].invalid && this.form.controls[name].touched;
   }

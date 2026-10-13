@@ -7,9 +7,12 @@
       savings goals together in one thoughtful space.
     </p>
     <div class="hero-actions">
-      <a routerLink="/register" class="button primary"
-        >Build your financial plan <ml-icon name="arrow" /></a
-      ><a routerLink="/login" class="button secondary">Explore the demo</a>
+      <a [routerLink]="auth.user() ? '/dashboard' : '/register'" class="button primary"
+        >{{ auth.user() ? 'Open your dashboard' : 'Build your financial plan' }}
+        <ml-icon name="arrow" /></a
+      ><a routerLink="/how-it-works" class="button secondary"
+        >See how it works <ml-icon name="arrow"
+      /></a>
     </div>
     <div class="hero-trust">
       <ml-icon name="shield" /> Secure by design <span>·</span> Made for your future
@@ -20,7 +23,7 @@
     <div class="hero-orbit orbit-two"></div>
     <div class="preview-card">
       <div class="preview-top">
-        <span class="mini-mark">M</span><span>YOUR MONEY, IN VIEW</span
+        <span class="mini-mark"><ml-brand-mark /></span><span>YOUR MONEY, IN VIEW</span
         ><span class="pill teal">On track</span>
       </div>
       <p class="label">Total net worth</p>
@@ -108,7 +111,9 @@
       account activity. You stay in control.
     </p>
   </div>
-  <a routerLink="/register" class="button dark">Start your path <ml-icon name="arrow" /></a>
+  <a [routerLink]="auth.user() ? '/dashboard' : '/register'" class="button dark"
+    >{{ auth.user() ? 'Return to your dashboard' : 'Start your path' }} <ml-icon name="arrow"
+  /></a>
 </section>
 <p class="financial-note">
   Monelytics is a personal finance planning and recordkeeping application. Projections are

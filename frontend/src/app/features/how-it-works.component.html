@@ -1,0 +1,206 @@
+<section class="how-hero">
+  <div class="how-hero-copy">
+    <span class="eyebrow">A CLEARER PICTURE, ONE STEP AT A TIME</span>
+    <h1>Good money habits.<br /><span>A simpler place to start.</span></h1>
+    <p>
+      Monelytics brings the everyday details of your money into one thoughtful space, so you can
+      understand today and make room for what comes next.
+    </p>
+    <div class="hero-actions">
+      <a class="button primary" [routerLink]="auth.user() ? '/dashboard' : '/register'"
+        >{{ auth.user() ? 'Open your dashboard' : 'Create your account' }}
+        <ml-icon name="arrow" /></a
+      ><a class="button secondary" [routerLink]="auth.user() ? '/assistant' : '/login'"
+        >{{ auth.user() ? 'Explore your assistant' : 'Try the demo' }} <ml-icon name="sparkles"
+      /></a>
+    </div>
+  </div>
+  <aside class="card how-at-a-glance">
+    <span class="circle-icon teal"><ml-icon name="chart" /></span
+    ><span class="eyebrow">THE EVERYDAY, IN VIEW</span>
+    <h2>Less guesswork.<br />More direction.</h2>
+    <ol>
+      <li>
+        <span>01</span>
+        <div>
+          <strong>Bring your accounts together</strong>
+          <p>Start with the balances you record.</p>
+        </div>
+      </li>
+      <li>
+        <span>02</span>
+        <div>
+          <strong>Give your spending a plan</strong>
+          <p>See income, expenses, and budget room.</p>
+        </div>
+      </li>
+      <li>
+        <span>03</span>
+        <div>
+          <strong>Make progress toward your goals</strong>
+          <p>Keep bills, savings, and next steps in view.</p>
+        </div>
+      </li>
+    </ol>
+    <p class="how-record-note">
+      <ml-icon name="info" /> Your records are yours. Monelytics does not connect to a bank or move
+      funds.
+    </p>
+  </aside>
+</section>
+<section class="how-steps" aria-labelledby="how-steps-title">
+  <div class="section-heading">
+    <span class="eyebrow">START WHERE YOU ARE</span>
+    <h2 id="how-steps-title">A few simple steps toward clarity.</h2>
+    <p>You can begin with one account and build your picture over time.</p>
+  </div>
+  <div class="how-step-grid">
+    <article class="card how-step">
+      <span class="how-step-number">01</span>
+      <h3>Make yourself at home.</h3>
+      <p>
+        Create an account, sign in, and choose optional authenticator verification in Settings. The
+        demo lets you explore with clearly fictional records.
+      </p>
+      <a [routerLink]="auth.user() ? '/settings' : '/register'" class="text-link"
+        >{{ auth.user() ? 'Review your settings' : 'Get started' }} <ml-icon name="arrow"
+      /></a>
+    </article>
+    <article class="card how-step">
+      <span class="how-step-number">02</span>
+      <h3>Bring in the details.</h3>
+      <p>
+        Add checking, savings, credit-card, or IRA accounts. Record income, expenses, and transfers,
+        then organize transactions with your own categories.
+      </p>
+      <a [routerLink]="auth.user() ? '/accounts' : '/login'" class="text-link"
+        >{{ auth.user() ? 'Manage your accounts' : 'Explore the demo' }} <ml-icon name="arrow"
+      /></a>
+    </article>
+    <article class="card how-step">
+      <span class="how-step-number">03</span>
+      <h3>Give your money direction.</h3>
+      <p>
+        Set monthly budgets, keep recurring bills in view, and build savings goals. Review your
+        dashboard and reports to see how the little steps add up.
+      </p>
+      <a [routerLink]="auth.user() ? '/budgets' : '/register'" class="text-link"
+        >{{ auth.user() ? 'Plan your month' : 'Build your plan' }} <ml-icon name="arrow"
+      /></a>
+    </article>
+  </div>
+</section>
+<section class="how-features" aria-labelledby="how-features-title">
+  <div class="section-heading">
+    <span class="eyebrow">ONE THOUGHTFUL SPACE</span>
+    <h2 id="how-features-title">A place for the whole picture.</h2>
+  </div>
+  <div class="how-feature-grid">
+    <article class="card">
+      <span class="circle-icon teal"><ml-icon name="wallet" /></span>
+      <h3>Accounts & transactions</h3>
+      <p>
+        See recorded balances and net worth. Search, filter, edit, and export transactions;
+        transfers update both account records together.
+      </p>
+    </article>
+    <article class="card">
+      <span class="circle-icon coral"><ml-icon name="budget" /></span>
+      <h3>Budgets that make sense</h3>
+      <p>
+        Plan an overall monthly limit or focus on expense categories. Clear progress and
+        notifications show when spending gets close to the plan.
+      </p>
+    </article>
+    <article class="card">
+      <span class="circle-icon teal"><ml-icon name="bill" /></span>
+      <h3>Bills & subscriptions</h3>
+      <p>
+        Keep due dates and recurring costs in view. Record payments you already made, with
+        repeat-request protection for each due date.
+      </p>
+    </article>
+    <article class="card">
+      <span class="circle-icon coral"><ml-icon name="target" /></span>
+      <h3>Goals worth saving for</h3>
+      <p>
+        Track money earmarked for an emergency fund, a memorable trip, or your next chapter.
+        Contributions measure progress independently of bank balances.
+      </p>
+    </article>
+    <article class="card">
+      <span class="circle-icon teal"><ml-icon name="chart" /></span>
+      <h3>Reports with perspective</h3>
+      <p>
+        Explore monthly income, expenses, cashflow, and spending categories. Accessible chart tables
+        and CSV exports make the details easy to review.
+      </p>
+    </article>
+    <article class="card">
+      <span class="circle-icon coral"><ml-icon name="shield" /></span>
+      <h3>Care built into the details</h3>
+      <p>
+        Protected sessions, optional MFA, account recovery, and a record of important actions help
+        you keep control of your financial information.
+      </p>
+    </article>
+  </div>
+</section>
+<section class="card how-assistant">
+  <div>
+    <span class="circle-icon teal"><ml-icon name="sparkles" /></span
+    ><span class="eyebrow">A THOUGHTFUL SECOND LOOK</span>
+    <h2>A little guidance.<br /><span>A clearer next step.</span></h2>
+    <p>
+      Ask about budgeting, saving, recurring costs, or a possible purchase. The assistant combines
+      general educational guidance with factors calculated from your recorded income, expenses,
+      budgets, bills, and savings plans.
+    </p>
+    <a [routerLink]="auth.user() ? '/assistant' : '/login'" class="button primary"
+      >{{ auth.user() ? 'Ask your assistant' : 'Sign in to explore' }} <ml-icon name="arrow"
+    /></a>
+  </div>
+  <div class="how-assistant-details">
+    <article>
+      <ml-icon name="chat" />
+      <div>
+        <h3>Your question, with context.</h3>
+        <p>
+          When hosted AI is configured, the question you type is sent to Groq. Recorded account data
+          is used within Monelytics and is not automatically sent to the provider.
+        </p>
+      </div>
+    </article>
+    <article>
+      <ml-icon name="chart" />
+      <div>
+        <h3>The facts behind the guidance.</h3>
+        <p>
+          Amounts and affordability factors come from your records. General AI explanations can be
+          mistaken; review the displayed factors and your actual circumstances.
+        </p>
+      </div>
+    </article>
+    <article>
+      <ml-icon name="leaf" />
+      <div>
+        <h3>A useful fallback.</h3>
+        <p>
+          Without a configured provider, or when it is unavailable, reviewed educational guidance
+          remains available. The response identifies which provider was used.
+        </p>
+      </div>
+    </article>
+    <p class="field-help">
+      Educational guidance only, not professional financial advice. The assistant cannot perform
+      transactions.
+    </p>
+  </div>
+</section>
+<section class="how-next">
+  <h2>Your next chapter starts with a little clarity.</h2>
+  <p>Start small. Keep your records current. Make room for what matters.</p>
+  <a [routerLink]="auth.user() ? '/dashboard' : '/register'" class="button dark"
+    >{{ auth.user() ? 'Return to your dashboard' : 'Get started' }} <ml-icon name="arrow"
+  /></a>
+</section>

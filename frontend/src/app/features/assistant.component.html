@@ -4,7 +4,14 @@
     <h1>A little guidance. <span>A clearer next step.</span></h1>
     <p>Explore your money questions with the facts behind your plan.</p>
   </div>
-  <span class="pill teal"><ml-icon name="shield" /> Read-only guidance</span>
+  <div class="assistant-status-pills">
+    <span class="pill teal"><ml-icon name="shield" /> Read-only guidance</span>
+    @if (providerStatus(); as status) {
+      <span class="pill neutral">{{
+        status.configured && status.provider === 'GROQ' ? 'Groq configured' : 'Educational mode'
+      }}</span>
+    }
+  </div>
 </div>
 <div class="assistant-layout">
   <p class="sr-only" role="status" aria-live="polite">{{ announcement() }}</p>
@@ -19,6 +26,33 @@
     <p class="assistant-intro">
       A purchase, a savings goal, or the everyday. Start with what is on your mind.
     </p>
+    <div class="assistant-provider-note">
+      @if (providerLoading()) {
+        <p role="status">Checking the assistant provider…</p>
+      } @else if (providerError()) {
+        <p class="field-error">{{ providerError() }}</p>
+        <button class="text-button" (click)="loadProvider()">Retry provider status</button>
+      } @else if (providerStatus(); as status) {
+        <strong>{{
+          status.configured && status.provider === 'GROQ'
+            ? 'Hosted AI is configured.'
+            : 'Educational mode is available.'
+        }}</strong>
+        <p>
+          {{
+            status.configured && status.provider === 'GROQ'
+              ? 'Groq generates general educational explanations. Monelytics supplies the separate factors and suggestions from your records.'
+              : 'Hosted AI is not configured on this instance. Reviewed educational guidance and analysis of your records remain available.'
+          }}
+        </p>
+        @if (status.configured) {
+          <span class="field-help"
+            >{{ status.remainingRequests }} of {{ status.dailyRequestLimit }} hosted requests
+            remaining today.</span
+          >
+        }
+      }
+    </div>
     <div class="assistant-examples" aria-label="Example questions">
       @for (example of examples; track example.title; let index = $index) {
         <button type="button" (click)="chooseExample(index)">
@@ -80,18 +114,19 @@
           A category lets the assistant include that category’s remaining budget.
         </p>
       }
+      <div class="assistant-privacy-note">
+        <ml-icon name="lock" />
+        <p>
+          When Groq is enabled, the question you type is sent to Groq. Account names, ledger
+          records, and financial summaries are not automatically sent. Avoid typing bank identifiers
+          or other private details. The assistant cannot add transactions or move money.
+        </p>
+      </div>
       <button class="button primary full" [disabled]="loading()">
         <ml-icon name="sparkles" />{{ loading() ? 'Thinking it through…' : 'Ask assistant'
         }}<ml-icon name="arrow" />
       </button>
     </form>
-    <div class="assistant-privacy-note">
-      <ml-icon name="lock" />
-      <p>
-        Account facts stay on the server. The assistant can read your recorded plan and cannot add
-        transactions or move money.
-      </p>
-    </div>
   </section>
   <div class="assistant-answer-area" [attr.aria-busy]="loading()">
     @if (loading()) {
@@ -109,9 +144,7 @@
             <span class="eyebrow">YOUR FINANCIAL PICTURE</span>
             <h2 id="assistant-reply-title">Here’s a little perspective.</h2>
           </div>
-          <span class="pill neutral">{{
-            answer.provider === 'MOCK' ? 'Demo assistant' : 'Local assistant'
-          }}</span>
+          <span class="pill neutral">{{ providerLabel(answer) }}</span>
         </div>
         <div class="assistant-question-quote">
           <ml-icon name="chat" />
@@ -132,6 +165,11 @@
             "
           /><strong>{{ decisionLabel(answer) }}</strong>
         </div>
+        @if (answer.provider === 'MOCK') {
+          <p class="assistant-fallback-note">
+            <ml-icon name="info" /><span>{{ fallbackMessage(answer) }}</span>
+          </p>
+        }
         <p class="assistant-answer">{{ answer.answer }}</p>
         <div class="assistant-factors-heading">
           <h3>The facts behind the guidance</h3>
@@ -177,8 +215,8 @@
         </p>
         <div class="assistant-welcome-checks">
           <span><ml-icon name="check" /> Based on your recorded information</span
-          ><span><ml-icon name="check" /> Clear factors, no invented balances</span
-          ><span><ml-icon name="check" /> No paid API in the default demo</span>
+          ><span><ml-icon name="check" /> Separate, recorded affordability factors</span
+          ><span><ml-icon name="check" /> Hosted AI or reviewed educational fallback</span>
         </div>
         <div class="assistant-welcome-links">
           <a routerLink="/budgets" class="text-link">Review your budgets <ml-icon name="arrow" /></a
@@ -191,7 +229,7 @@
   </div>
 </div>
 <p class="financial-note">
-  Educational guidance only. Your records may be incomplete or out of date. Consider your
-  circumstances before making financial decisions; Monelytics is a recordkeeping application and
-  never holds or transfers funds.
+  Educational guidance only, not professional financial advice. AI explanations can be mistaken, and
+  your records may be incomplete or out of date. Consider your circumstances before making financial
+  decisions; Monelytics is a recordkeeping application and never holds or transfers funds.
 </p>

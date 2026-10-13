@@ -34,6 +34,7 @@ export function retirementAgeValidator(control: AbstractControl): ValidationErro
   templateUrl: './goals.component.html',
 })
 export class GoalsComponent {
+  private historyRequest = 0;
   private readonly api = inject(ApiService);
   private readonly fb = inject(FormBuilder);
   readonly showCalculator = signal(false);
@@ -180,21 +181,29 @@ export class GoalsComponent {
     this.contributionForm.reset({ amount: 0, date: localDate(), note: '' });
     await this.loadContributions();
   }
-  async loadContributions(): Promise<void> {
+  async loadContributions(goalId = this.contributionGoal()?.id): Promise<void> {
+    if (!goalId || this.contributionGoal()?.id !== goalId) return;
+    const request = ++this.historyRequest;
     this.historyLoading.set(true);
     try {
-      this.contributions.set(await this.api.contributions(this.contributionGoal()!.id));
+      const history = await this.api.contributions(goalId);
+      if (request === this.historyRequest && this.contributionGoal()?.id === goalId)
+        this.contributions.set(history);
     } catch (error) {
-      this.contributionError.set(errorMessage(error));
+      if (request === this.historyRequest && this.contributionGoal()?.id === goalId)
+        this.contributionError.set(errorMessage(error));
     } finally {
-      this.historyLoading.set(false);
+      if (request === this.historyRequest && this.contributionGoal()?.id === goalId)
+        this.historyLoading.set(false);
     }
   }
   private updateGoal(goal: Goal): void {
     this.goals.update((goals) => goals.map((g) => (g.id === goal.id ? goal : g)));
-    this.contributionGoal.set(goal);
+    if (this.contributionGoal()?.id === goal.id) this.contributionGoal.set(goal);
   }
   async contribute(): Promise<void> {
+    const goal = this.contributionGoal();
+    if (!goal || this.saving()) return;
     this.contributionForm.markAllAsTouched();
     if (this.contributionForm.invalid || this.contributionForm.controls.date.value > this.today) {
       this.contributionError.set(
@@ -205,28 +214,34 @@ export class GoalsComponent {
     this.saving.set(true);
     this.contributionError.set('');
     try {
-      this.updateGoal(
-        await this.api.contribute(this.contributionGoal()!.id, this.contributionForm.getRawValue()),
-      );
-      this.contributionSuccess.set('Your savings contribution is recorded.');
-      this.contributionForm.reset({ amount: 0, date: localDate(), note: '' });
-      await this.loadContributions();
+      this.updateGoal(await this.api.contribute(goal.id, this.contributionForm.getRawValue()));
+      if (this.contributionGoal()?.id === goal.id) {
+        this.contributionSuccess.set('Your savings contribution is recorded.');
+        this.contributionForm.reset({ amount: 0, date: localDate(), note: '' });
+        await this.loadContributions(goal.id);
+      } else this.success.set('Your savings contribution is recorded.');
     } catch (error) {
-      this.contributionError.set(errorMessage(error));
+      if (this.contributionGoal()?.id === goal.id) this.contributionError.set(errorMessage(error));
+      else this.error.set(errorMessage(error));
     } finally {
       this.saving.set(false);
     }
   }
   async removeContribution(id: string): Promise<void> {
+    const goal = this.contributionGoal();
+    if (!goal || this.saving()) return;
     this.saving.set(true);
     this.contributionError.set('');
     try {
-      this.updateGoal(await this.api.removeContribution(this.contributionGoal()!.id, id));
-      this.confirmingRemoval.set(null);
-      this.contributionSuccess.set('Contribution removed and goal progress updated.');
-      await this.loadContributions();
+      this.updateGoal(await this.api.removeContribution(goal.id, id));
+      if (this.contributionGoal()?.id === goal.id) {
+        this.confirmingRemoval.set(null);
+        this.contributionSuccess.set('Contribution removed and goal progress updated.');
+        await this.loadContributions(goal.id);
+      } else this.success.set('Contribution removed and goal progress updated.');
     } catch (error) {
-      this.contributionError.set(errorMessage(error));
+      if (this.contributionGoal()?.id === goal.id) this.contributionError.set(errorMessage(error));
+      else this.error.set(errorMessage(error));
     } finally {
       this.saving.set(false);
     }

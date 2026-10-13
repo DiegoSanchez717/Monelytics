@@ -22,11 +22,25 @@ describe('financial assistant', () => {
     readOnly: true,
     asOf: '2026-10-08T12:00:00Z',
   };
-  const api = { categories: vi.fn(), askAssistant: vi.fn(), save: vi.fn() };
+  const api = {
+    categories: vi.fn(),
+    askAssistant: vi.fn(),
+    assistantStatus: vi.fn(),
+    save: vi.fn(),
+  };
   beforeEach(() => {
     vi.resetAllMocks();
     api.categories.mockResolvedValue(categories);
     api.askAssistant.mockResolvedValue(response);
+    api.assistantStatus.mockResolvedValue({
+      provider: 'MOCK',
+      configured: false,
+      model: null,
+      dailyRequestLimit: 30,
+      remainingRequests: 30,
+      disclosure:
+        'Your question is sent to Groq when configured. Recorded account data stays on this server.',
+    });
     TestBed.configureTestingModule({
       imports: [AssistantComponent],
       providers: [provideRouter([]), { provide: ApiService, useValue: api }],
@@ -89,20 +103,64 @@ describe('financial assistant', () => {
     expect(answer.textContent).toContain(response.answer);
     expect(answer.textContent).toContain('$431.27');
     expect(answer.textContent).toContain(response.disclaimer);
-    expect(answer.textContent).toContain('Demo assistant');
+    expect(answer.textContent).toContain('Educational fallback');
     expect(answer.textContent).toContain('Read-only · no transactions performed');
     expect(api.save).not.toHaveBeenCalled();
     expect(answer.querySelectorAll('button')).toHaveLength(0);
   });
-  it('shows the actual local provider badge when the server used a local model', async () => {
-    api.askAssistant.mockResolvedValueOnce({ ...response, provider: 'LOCAL' });
+  it('shows the actual Groq provider badge for a hosted response', async () => {
+    api.askAssistant.mockResolvedValueOnce({
+      ...response,
+      provider: 'GROQ',
+      answer: 'A hosted educational explanation.',
+    });
     const fixture = TestBed.createComponent(AssistantComponent);
     fixture.componentInstance.form.controls.question.setValue('How do budgets help?');
     await fixture.componentInstance.ask();
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('.assistant-reply').textContent).toContain(
-      'Local assistant',
+      'Groq assistant',
     );
+    expect(fixture.nativeElement.querySelector('.assistant-answer').textContent).toContain(
+      'A hosted educational explanation.',
+    );
+    expect(fixture.nativeElement.querySelector('.assistant-fallback-note')).toBeNull();
+  });
+  it('explains a provider rate limit while showing the reviewed fallback and recorded factors', async () => {
+    api.askAssistant.mockResolvedValueOnce({ ...response, fallbackReason: 'RATE_LIMIT' });
+    const fixture = TestBed.createComponent(AssistantComponent);
+    fixture.componentInstance.form.controls.question.setValue('How can I budget?');
+    await fixture.componentInstance.ask();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.assistant-fallback-note').textContent).toContain(
+      'rate limited',
+    );
+    expect(fixture.nativeElement.querySelector('.assistant-factor').textContent).toContain(
+      '$431.27',
+    );
+  });
+  it('discloses hosted question sharing before submission and reports when Groq is configured', async () => {
+    api.assistantStatus.mockResolvedValue({
+      provider: 'GROQ',
+      configured: true,
+      model: 'openai/gpt-oss-20b',
+      dailyRequestLimit: 30,
+      remainingRequests: 29,
+      disclosure: 'Your question is sent to Groq when configured.',
+    });
+    const fixture = TestBed.createComponent(AssistantComponent);
+    await fixture.componentInstance.loadProvider();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.assistant-provider-note').textContent).toContain(
+      'Hosted AI is configured',
+    );
+    expect(fixture.nativeElement.querySelector('.assistant-privacy-note').textContent).toContain(
+      'the question you type is sent to Groq',
+    );
+    expect(fixture.nativeElement.querySelector('.assistant-privacy-note').textContent).toContain(
+      'not automatically sent',
+    );
+    expect(api.askAssistant).not.toHaveBeenCalled();
   });
   it('keeps the question editable and shows no invented answer on failure', async () => {
     api.askAssistant.mockRejectedValueOnce(

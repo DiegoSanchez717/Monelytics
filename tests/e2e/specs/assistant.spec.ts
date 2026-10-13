@@ -88,7 +88,7 @@ test("assistant evaluates actual affordability and never creates transactions", 
     "Appears to fit your recorded plan",
   );
   await expect(page.locator(".assistant-reply")).toContainText(
-    "Demo assistant",
+    "Educational fallback",
   );
   await expect(
     page

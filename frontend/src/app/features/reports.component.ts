@@ -22,6 +22,7 @@ import { StateComponent } from '../shared/state.component';
   templateUrl: './reports.component.html',
 })
 export class ReportsComponent {
+  private loadRequest = 0;
   private readonly api = inject(ApiService);
   readonly month = signal(currentMonth());
   readonly monthLabel = monthLabel;
@@ -32,14 +33,16 @@ export class ReportsComponent {
     void this.load();
   }
   async load(): Promise<void> {
+    const request = ++this.loadRequest;
     this.loading.set(true);
     this.error.set('');
     try {
-      this.data.set(await this.api.analytics(this.month()));
+      const data = await this.api.analytics(this.month());
+      if (request === this.loadRequest) this.data.set(data);
     } catch (error) {
-      this.error.set(errorMessage(error));
+      if (request === this.loadRequest) this.error.set(errorMessage(error));
     } finally {
-      this.loading.set(false);
+      if (request === this.loadRequest) this.loading.set(false);
     }
   }
   changeMonth(event: Event): void {

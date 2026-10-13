@@ -5,6 +5,7 @@ import {
   Account,
   AssistantQuestion,
   AssistantReply,
+  AssistantStatus,
   Analytics,
   AuditEntry,
   Budget,
@@ -93,6 +94,9 @@ export class ApiService {
     // Questions are evaluated by the server against this user's recorded data.
     // The assistant endpoint has no permission to write to the ledger.
     return this.save<AssistantReply>('/assistant/chat', question);
+  }
+  assistantStatus(): Promise<AssistantStatus> {
+    return this.get<AssistantStatus>('/assistant/status');
   }
   audit(page: number): Promise<Page<AuditEntry>> {
     return this.get<Page<AuditEntry>>('/audit', {

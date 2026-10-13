@@ -10,7 +10,7 @@
 .chart-labels {
   display: flex;
   justify-content: space-between;
-  color: #64767e;
+  color: var(--muted);
   font-size: 11px;
   padding-top: 14px;
   gap: 8px;

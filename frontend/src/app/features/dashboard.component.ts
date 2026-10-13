@@ -32,6 +32,7 @@ import { StateComponent } from '../shared/state.component';
   templateUrl: './dashboard.component.html',
 })
 export class DashboardComponent {
+  private loadRequest = 0;
   private readonly api = inject(ApiService);
   readonly auth = inject(AuthService);
   readonly data = signal<Dashboard | null>(null);
@@ -54,13 +55,13 @@ export class DashboardComponent {
     void this.load();
   }
   async load(): Promise<void> {
+    const request = ++this.loadRequest;
+    const month = this.month();
     this.loading.set(true);
     this.error.set('');
     try {
-      const [data, bills] = await Promise.all([
-        this.api.dashboard(this.month()),
-        this.api.recurring(),
-      ]);
+      const [data, bills] = await Promise.all([this.api.dashboard(month), this.api.recurring()]);
+      if (request !== this.loadRequest) return;
       this.data.set(data);
       this.bills.set(
         bills
@@ -69,9 +70,9 @@ export class DashboardComponent {
           .slice(0, 3),
       );
     } catch (error) {
-      this.error.set(errorMessage(error));
+      if (request === this.loadRequest) this.error.set(errorMessage(error));
     } finally {
-      this.loading.set(false);
+      if (request === this.loadRequest) this.loading.set(false);
     }
   }
   changeMonth(event: Event): void {

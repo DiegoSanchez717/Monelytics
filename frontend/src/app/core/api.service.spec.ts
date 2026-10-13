@@ -62,6 +62,20 @@ describe('REST communication', () => {
     request.flush({ provider: 'MOCK', readOnly: true, answer: 'Review your recorded budget.' });
     expect((await promise).readOnly).toBe(true);
   });
+  it('reads hosted assistant availability from the authenticated status endpoint', async () => {
+    const promise = api.assistantStatus();
+    const request = http.expectOne('/api/assistant/status');
+    expect(request.request.method).toBe('GET');
+    request.flush({
+      provider: 'GROQ',
+      configured: true,
+      model: 'openai/gpt-oss-20b',
+      dailyRequestLimit: 30,
+      remainingRequests: 29,
+      disclosure: 'Only your question is sent.',
+    });
+    expect((await promise).remainingRequests).toBe(29);
+  });
   it('exports all matching transactions as a CSV blob with category filters', async () => {
     const promise = api.exportTransactions({
       categoryId: 'expense-category',
